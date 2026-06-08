@@ -1,0 +1,170 @@
+export default {
+	'Activate create/remove space tool':
+		'Включить инструмент «Управление пространством»',
+	'Activate global connect tool': 'Включить инструмент «Глобальное соединение»',
+	'Activate hand tool': 'Включить инструмент «Рука»',
+	'Activate lasso tool': 'Включить инструмент «Лассо»',
+	'Ad-hoc': 'Для этого случая',
+	'Ad-hoc sub-process (collapsed)': 'Специальный подпроцесс (свернутый)',
+	'Ad-hoc sub-process (expanded)': 'Специальный подпроцесс (развернутый)',
+	'Add lane above': 'Добавить дорожку сверху',
+	'Add lane below': 'Добавить дорожку снизу',
+	'Add text annotation': 'Добавить текстовую аннотацию',
+	'Align elements': 'Выровнять элементы',
+	'Align elements bottom': 'Выровнять элементы по нижней границе',
+	'Align elements center': 'Выровнять элементы по центру',
+	'Align elements left': 'Выровнять элементы по левому краю',
+	'Align elements middle': 'Выровнять элементы посередине',
+	'Align elements right': 'Выровнять элементы по правому краю',
+	'Align elements top': 'Выровнять элементы по верхней границе',
+	'Append compensation activity': 'Добавить компенсирующее действие',
+	'Append conditional intermediate catch event':
+		'Добавить обработчик промежуточного события-условия',
+	'Append end event': 'Добавить конечное событие',
+	'Append gateway': 'Добавить шлюз',
+	'Append intermediate/boundary event':
+		'Добавить промежуточное/граничное событие',
+	'Append message intermediate catch event':
+		'Добавить обработчик промежуточного события-сообщения',
+	'Append receive task': 'Добавить задачу получения сообщения',
+	'Append signal intermediate catch event':
+		'Добавить обработчик промежуточного события-сигнала',
+	'Append task': 'Добавить задачу',
+	'Append text annotation': 'Добавить комментарий',
+	'Append timer intermediate catch event':
+		'Добавить обработчик промежуточного события-таймера',
+	'Business rule task': 'Задача выполнения бизнес-правила',
+	'Call activity': 'Действие «Вызов»',
+	'Cancel boundary event': 'Граничное событие-отмена',
+	'Cancel end event': 'Конечное событие-отмена',
+	'Change element': 'Изменить элемент',
+	'Change type': 'Изменить тип',
+	Collection: 'Коллекция',
+	'Compensation boundary event': 'Граничное событие-компенсация',
+	'Compensation end event': 'Конечное событие-компенсация',
+	'Compensation intermediate throw event':
+		'Инициатор промежуточного события-компенсации',
+	'Compensation start event': 'Начальное событие-компенсация',
+	'Complex gateway': 'Комплексный шлюз',
+	'Conditional boundary event': 'Граничное событие-условие',
+	'Conditional boundary event (non-interrupting)':
+		'Граничное событие-условие (без прерываний)',
+	'Conditional flow': 'Граничный поток',
+	'Conditional intermediate catch event':
+		'Обработчик промежуточного события-условия',
+	'Conditional start event': 'Начальное событие-условие',
+	'Conditional start event (non-interrupting)':
+		'Начальное событие-условие (без прерываний)',
+	'Connect to other element': 'Соединить с другим элементом',
+	'Connect using association': 'Соединить с использованием ассоциации',
+	'Connect using data input association':
+		'Соединить с использованием ассоциации ввода данных',
+	'Connect using sequence/message flow or association':
+		'Соединить с использованием потока управления/сообщений или ассоциации',
+	'Create data object reference': 'Создать объект данных',
+	'Create data store reference': 'Создать хранилище данных',
+	'Create end event': 'Создать конечное событие',
+	'Create expanded sub-process': 'Создать развернутый подпроцесс',
+	'Create gateway': 'Создать шлюз',
+	'Create group': 'Создать группу',
+	'Create intermediate/boundary event':
+		'Создать промежуточное/граничное событие',
+	'Create pool/participant': 'Создать пул/участника',
+	'Create start event': 'Создать начальное событие',
+	'Create task': 'Создать задачу',
+	'Data object reference': 'Объект данных',
+	'Data store reference': 'Хранилище данных',
+	'Default flow': 'Поток по умолчанию',
+	Delete: 'Удалить',
+	'Distribute elements horizontally': 'Расположить элементы по горизонтали',
+	'Distribute elements vertically': 'Расположить элементы по вертикали',
+	'Divide into three lanes': 'Разделить на три дорожки',
+	'Divide into two lanes': 'Разделить на две дорожки',
+	'Empty pool/participant': 'Пустой пул',
+	'Empty pool/participant (removes content)': 'Пустой пул (удаляет контент)',
+	'End event': 'Конечное событие',
+	'Error boundary event': 'Граничное событие-ошибка',
+	'Error end event': 'Конечное событие-ошибка',
+	'Error start event': 'Начальное событие-ошибка',
+	'Escalation boundary event': 'Граничное событие-эскалация',
+	'Escalation boundary event (non-interrupting)':
+		'Граничное событие-эскалация (без прерываний)',
+	'Escalation end event': 'Конечное событие-эскалация',
+	'Escalation intermediate throw event':
+		'Инициатор промежуточного события-эскалации',
+	'Escalation start event': 'Начальное событие-эскалация',
+	'Escalation start event (non-interrupting)':
+		'Начальное событие-эскалация (без прерываний)',
+	'Event sub-process': 'Подпроцесс по событию',
+	'Event-based gateway': 'Шлюз по событиям',
+	'Exclusive gateway': 'Шлюз «исключающее или»',
+	'Inclusive gateway': 'Шлюз «или»',
+	'Intermediate throw event': 'Промежуточное событие-инициатор',
+	'Link intermediate catch event': 'Обработчик промежуточного события-ссылки',
+	'Link intermediate throw event': 'Инициатор промежуточного события-ссылки',
+	Loop: 'Цикл',
+	'Manual task': 'Задача, выполняемая вручную',
+	'Message boundary event': 'Граничное событие-сообщение',
+	'Message boundary event (non-interrupting)':
+		'Граничное событие-сообщение (без прерываний)',
+	'Message end event': 'Конечное событие-сообщение',
+	'Message intermediate catch event':
+		'Обработчик промежуточного события-сообщения',
+	'Message intermediate throw event':
+		'Инициатор промежуточного события-сообщения',
+	'Message start event': 'Начальное событие-сообщение',
+	'Message start event (non-interrupting)':
+		'Начальное событие-сообщение (без прерываний)',
+	'Open {element}': 'Открыть {element}',
+	'Parallel gateway': 'Шлюз «и»',
+	'Parallel multi-instance': 'Параллельное выполнение',
+	'Participant multiplicity': 'Множество участников',
+	'Receive task': 'Задача получения сообщения',
+	Remove: 'Удалить',
+	'Script task': 'Задача-сценарий',
+	'Search in diagram': 'Поиск на диаграмме',
+	'Send task': 'Задача отправки сообщения',
+	'Sequence flow': 'Поток управления',
+	'Sequential multi-instance': 'Последовательное выполнение',
+	'Service task': 'Задача-сервис',
+	'Signal boundary event': 'Граничное событие-сигнал',
+	'Signal boundary event (non-interrupting)':
+		'Граничное событие-сигнал (без прерываний)',
+	'Signal end event': 'Конечное событие-сигнал',
+	'Signal intermediate catch event':
+		'Обработчик промежуточного события-сигнала',
+	'Signal intermediate throw event': 'Инициатор промежуточного события-сигнала',
+	'Signal start event': 'Начальное событие-сигнал',
+	'Signal start event (non-interrupting)':
+		'Начальное событие-сигнал (без прерываний)',
+	'Start event': 'Начальное событие',
+	'Sub-process': 'Подпроцесс',
+	'Sub-process (collapsed)': 'Свернутый подпроцесс',
+	'Sub-process (expanded)': 'Развернутый подпроцесс',
+	Task: 'Задача',
+	'Terminate end event': 'Конечное событие-остановка',
+	'Timer boundary event': 'Граничное событие-таймер',
+	'Timer boundary event (non-interrupting)':
+		'Граничное событие-таймер (без прерываний)',
+	'Timer intermediate catch event': 'Обработчик промежуточного события-таймера',
+	'Timer start event': 'Начальное событие-таймер',
+	'Timer start event (non-interrupting)':
+		'Начальное событие-таймер (без прерываний)',
+	Transaction: 'Транзакция',
+	'User task': 'Задача, выполняемая пользователем',
+	'correcting missing bpmnElement on {plane} to {rootElement}':
+		'Исправление отсутствующего bpmn-элемента на {plane} у {rootElement}',
+	'element {element} referenced by {referenced}#{property} not yet drawn':
+		'Элемент {element}, на который ссылается {referenced}#{property}, еще не отрисован',
+	'failed to import {element}': 'Не удалось импортировать {element}',
+	'flow elements must be children of pools/participants':
+		'Элементы потока должны быть дочерними элементами пула/участников',
+	'missing {semantic}#attachedToRef': 'Отсутствует {semantic}#attachedToRef',
+	'multiple DI elements defined for {element}':
+		'Определено множество DI элементов для {element}',
+	'no bpmnElement referenced in {element}':
+		'нет ни одного bpmn-элемента, ссылающегося на {element}',
+	'no diagram to display': 'Нет диаграммы для отображения',
+	'no process or collaboration to display':
+		'Нет процесса или взаимодействия для отображения',
+} as const;

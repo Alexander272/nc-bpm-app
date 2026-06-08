@@ -1,6 +1,6 @@
 <?php
 
-namespace OCA\FilesBpm\Migration;
+namespace OCA\FilesBpmRU\Migration;
 
 use OCP\Files\IMimeTypeDetector;
 use OCP\Files\IMimeTypeLoader;

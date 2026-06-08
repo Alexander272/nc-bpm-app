@@ -1,6 +1,6 @@
 <?php
 
-namespace OCA\FilesBpm\Settings;
+namespace OCA\FilesBpmRU\Settings;
 
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IConfig;

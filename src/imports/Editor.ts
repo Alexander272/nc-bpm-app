@@ -7,25 +7,25 @@ import { DialogBuilder, showError } from '@nextcloud/dialogs';
 import '@nextcloud/dialogs/style.css';
 import { generateUrl, imagePath } from '@nextcloud/router';
 export type NextcloudFile = {
-	id?: number
-	name: string
-	path: string
-	size?: number
-	etag?: string
-	permissions: number
-	mime?: string
-	writeable: boolean
-}
+	id?: number;
+	name: string;
+	path: string;
+	size?: number;
+	etag?: string;
+	permissions: number;
+	mime?: string;
+	writeable: boolean;
+};
 
 export type NextcloudFileList = {
-	setViewerMode: (enabled: boolean) => void
-	showMask: () => void
-	hideMask: () => void
-	reload: () => Promise<void>
-	getDirectoryPermissions: () => number
-	findFile: (fileName: string) => NextcloudFile | null
-	shown?: boolean
-}
+	setViewerMode: (enabled: boolean) => void;
+	showMask: () => void;
+	hideMask: () => void;
+	reload: () => Promise<void>;
+	getDirectoryPermissions: () => number;
+	findFile: (fileName: string) => NextcloudFile | null;
+	shown?: boolean;
+};
 
 const STATUS_CREATED = 201;
 const STATUS_PRECONDITION_FAILED = 412;
@@ -42,13 +42,16 @@ export default abstract class Editor {
 
 	private resizeHandler: (() => void)[] = [];
 
-	constructor(protected file: NextcloudFile, private fileList?: NextcloudFileList) {
+	constructor(
+		protected file: NextcloudFile,
+		private fileList?: NextcloudFileList,
+	) {
 		this.originalUrl = new URL(window.location.toString());
 		this.originalEtag = file.etag || '';
 		this.hasUnsavedChanges = !file.etag && !OCA.Sharing?.PublicApp;
 
 		window.addEventListener('beforeunload', this.onBeforeUnload);
-	};
+	}
 
 	protected abstract getContent(): Promise<string>;
 
@@ -63,7 +66,7 @@ export default abstract class Editor {
 
 	public async start(): Promise<void> {
 		this.addEditStateToHistory();
-		document.title = this.file.name +' - Nextcloud';
+		document.title = this.file.name + ' - Nextcloud';
 		await this.runEditor();
 		this.setAppContainerReady();
 		//this.addPropertiesResizeListener();
@@ -96,7 +99,6 @@ export default abstract class Editor {
 		OC.Util.History.replaceState(url.searchParams.toString());
 	}
 
-
 	// private addPropertiesResizeListener () {
 	// 	const resizeElement = this.containerElement.find('>.bpmn-properties-resizer');
 	// 	const propertiesElement = this.containerElement.find('>.bpmn-properties');
@@ -125,14 +127,15 @@ export default abstract class Editor {
 	// 	}
 	// }
 
-
 	protected getAppContainerElement(): JQuery {
 		if (!this.containerElement || this.containerElement.length === 0) {
-
 			this.containerElement = $('<div>');
 			this.containerElement.attr('id', CONTENT_ID);
 			this.containerElement.addClass('icon-loading');
-			this.containerElement.attr('data-state', this.hasUnsavedChanges ? 'unsaved' : 'saved');
+			this.containerElement.attr(
+				'data-state',
+				this.hasUnsavedChanges ? 'unsaved' : 'saved',
+			);
 
 			const paletteElement = $('<div>');
 			paletteElement.addClass('bpmn-palette bpmn-filename');
@@ -144,23 +147,29 @@ export default abstract class Editor {
 				class: 'bpmn-group',
 			}).appendTo(paletteElement);
 
-			const oldflag = getComputedStyle(document.body).getPropertyValue('--original-icon-download-dark') == '';
+			const oldflag =
+				getComputedStyle(document.body).getPropertyValue(
+					'--original-icon-download-dark',
+				) == '';
 
 			if (this.isFileUpdatable()) {
 				const button = $('<div>')
-				.addClass('entry icon-save bpmn-save')
-				.attr('role', 'button')
-				.on('click', this.clickCallbackFactory(this.onSave, 'icon-save'))
-				.appendTo(groupElement);
+					.addClass('entry icon-save bpmn-save')
+					.attr('role', 'button')
+					.on('click', this.clickCallbackFactory(this.onSave, 'icon-save'))
+					.appendTo(groupElement);
 
-				const img = $('<img>').attr('src', imagePath('files_bpm', 'floppy-disk.svg'));
+				const img = $('<img>').attr(
+					'src',
+					imagePath('files_bpm_ru', 'floppy-disk.svg'),
+				);
 				button.append(img);
 			}
 
 			const downloadElement = $('<div>')
-			.attr('role', 'button')
-			.on('click', this.toggleMenu)
-			.appendTo(groupElement);
+				.attr('role', 'button')
+				.on('click', this.toggleMenu)
+				.appendTo(groupElement);
 
 			if (oldflag) {
 				downloadElement.addClass('entry icon-download-old');
@@ -168,26 +177,48 @@ export default abstract class Editor {
 				downloadElement.addClass('entry icon-download');
 			}
 
-			const svgIcon = $('<img>').attr('src', imagePath('files_bpm', 'image.svg'));
-			const pdfIcon = $('<img>').attr('src', imagePath('files_bpm', 'application-pdf.svg'));
+			const svgIcon = $('<img>').attr(
+				'src',
+				imagePath('files_bpm_ru', 'image.svg'),
+			);
+			const pdfIcon = $('<img>').attr(
+				'src',
+				imagePath('files_bpm_ru', 'application-pdf.svg'),
+			);
 			$('<ul>')
-			.addClass('menu hide')
-			.append($('<li>').addClass('entry icon-image').attr('title', t('files_bpm', 'Export SVG')).on('click', this.clickCallbackFactory(this.onDownloadAsSVG, 'icon-download')).append(svgIcon))
-			.append($('<li>').addClass('entry icon-pdf').attr('title', t('files_bpm', 'Export PDF')).on('click', this.clickCallbackFactory(this.onDownloadAsPDF, 'icon-download')).append(pdfIcon))
-			.appendTo(downloadElement);
+				.addClass('menu hide')
+				.append(
+					$('<li>')
+						.addClass('entry icon-image')
+						.attr('title', t('files_bpm_ru', 'Export SVG'))
+						.on(
+							'click',
+							this.clickCallbackFactory(this.onDownloadAsSVG, 'icon-download'),
+						)
+						.append(svgIcon),
+				)
+				.append(
+					$('<li>')
+						.addClass('entry icon-pdf')
+						.attr('title', t('files_bpm_ru', 'Export PDF'))
+						.on(
+							'click',
+							this.clickCallbackFactory(this.onDownloadAsPDF, 'icon-download'),
+						)
+						.append(pdfIcon),
+				)
+				.appendTo(downloadElement);
 
 			if (this.isRealFileList()) {
 				const closeBtn = $('<div>')
-				.attr('role', 'button')
-				.on('click', this.clickCallbackFactory(this.onClose))
-				.appendTo(groupElement);
+					.attr('role', 'button')
+					.on('click', this.clickCallbackFactory(this.onClose))
+					.appendTo(groupElement);
 				if (oldflag) {
 					closeBtn.addClass('entry icon-close-old bpmn-close');
-
 				} else {
 					closeBtn.addClass('entry icon-close bpmn-close');
 				}
-
 			}
 			const canvasElement = $('<div>');
 			canvasElement.addClass('bpmn-canvas');
@@ -196,7 +227,10 @@ export default abstract class Editor {
 			$('#app-content').append(this.containerElement);
 			//$('.app-navigation').addClass('hidden');
 
-			if (this.isFileUpdatable() && this.containerElement.find('>.bpmn-properties').length === 0) {
+			if (
+				this.isFileUpdatable() &&
+				this.containerElement.find('>.bpmn-properties').length === 0
+			) {
 				// const propertiesResizeElement = $('<div>');
 				// propertiesResizeElement.addClass('bpmn-properties-resizer');
 				// propertiesResizeElement.appendTo(this.containerElement);
@@ -211,7 +245,6 @@ export default abstract class Editor {
 	}
 
 	protected toggleMenu = (ev: JQuery.ClickEvent) => {
-
 		ev.preventDefault();
 		ev.stopPropagation();
 		const list = $(ev.currentTarget).find('ul');
@@ -229,7 +262,7 @@ export default abstract class Editor {
 		}
 
 		list.toggleClass('hide');
-	}
+	};
 
 	private setAppContainerReady(): void {
 		this.containerElement && this.containerElement.removeClass('icon-loading');
@@ -257,14 +290,15 @@ export default abstract class Editor {
 	// }
 
 	protected showLoadingError(errorMessage: string): void {
-		const text = t('files_bpm', 'Error while loading diagram: ') + errorMessage;
-		const title = t('files_bpm', 'Could not load diagram');
+		const text =
+			t('files_bpm_ru', 'Error while loading diagram: ') + errorMessage;
+		const title = t('files_bpm_ru', 'Could not load diagram');
 
 		showError(text);
 	}
 
 	private async onClose() {
-		if (this.hasUnsavedChanges && !await this.showConfirmClose()) {
+		if (this.hasUnsavedChanges && !(await this.showConfirmClose())) {
 			return;
 		}
 
@@ -284,16 +318,22 @@ export default abstract class Editor {
 
 		window.removeEventListener('beforeunload', this.onBeforeUnload);
 		if (parseInt(OC.config.version.substring(0, 2)) >= 28) {
-			window.location.href = OC.generateUrl('/apps/files/?dir=' + this.file.path); //files/dir=path without files_bpm
+			window.location.href = OC.generateUrl(
+				'/apps/files/?dir=' + this.file.path,
+			); //files/dir=path without files_bpm_ru
 		}
 	}
-
 
 	private async onSave() {
 		const content = await this.getContent();
 		console.log('The content is: ');
 		console.log(content);
-		const result = await api.uploadFile(this.file.path, this.file.name, content, this.file.etag);
+		const result = await api.uploadFile(
+			this.file.path,
+			this.file.name,
+			content,
+			this.file.etag,
+		);
 		console.log('Result: ');
 		console.log(result);
 
@@ -311,14 +351,23 @@ export default abstract class Editor {
 
 		if (result.statuscode === STATUS_PRECONDITION_FAILED) {
 			await this.onFileHasChanged(result.header.etag);
-			const retry = await api.uploadFile(this.file.path, this.file.name, content, this.file.etag);
-			if(!(retry.statuscode >= 200 && retry.statuscode <= 299) ){
-				throw new Error(`Unexpected status code (${retry.statuscode}) while uploading file on second try`);
+			const retry = await api.uploadFile(
+				this.file.path,
+				this.file.name,
+				content,
+				this.file.etag,
+			);
+			if (!(retry.statuscode >= 200 && retry.statuscode <= 299)) {
+				throw new Error(
+					`Unexpected status code (${retry.statuscode}) while uploading file on second try`,
+				);
 			}
 			return;
 		}
 
-		throw new Error(`Unexpected status code (${result.statuscode}) while uploading file`);
+		throw new Error(
+			`Unexpected status code (${result.statuscode}) while uploading file`,
+		);
 	}
 
 	private async onDownloadAsSVG() {
@@ -326,7 +375,10 @@ export default abstract class Editor {
 		const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
 		const svgUrl = URL.createObjectURL(svgBlob);
 
-		const linkElement = $('<a>').attr('href', svgUrl).attr('download', this.file.name.replace(/\.[^.]+$/, '.svg')).css('visibility', 'hidden');
+		const linkElement = $('<a>')
+			.attr('href', svgUrl)
+			.attr('download', this.file.name.replace(/\.[^.]+$/, '.svg'))
+			.css('visibility', 'hidden');
 		linkElement.appendTo('body');
 		linkElement.get(0)?.click();
 		linkElement.remove();
@@ -334,38 +386,36 @@ export default abstract class Editor {
 
 	//pdf printing
 	private async onDownloadAsPDF() {
-
 		//using mm as units breaks the arrows in the SVGs
 		const pdf = new jsPDF({
 			orientation: 'landscape',
 			format: 'a4',
-				unit: 'px',
-		});//bounding.width > bounding.height ? 'l' : 'p', 'pt', [bounding.width, bounding.height]);
+			unit: 'px',
+		}); //bounding.width > bounding.height ? 'l' : 'p', 'pt', [bounding.width, bounding.height]);
 		const title = this.file.name.replace(/\.[^.]+$/, '') ?? 'Diagram';
 
 		pdf.setFontSize(25).text(title, 15, 30);
 		await this.downloadAsPDF(pdf);
 
-
 		try {
-			await pdf.save(this.file.name.replace(/\.[^.]+$/, '.pdf'), { returnPromise: true });
+			await pdf.save(this.file.name.replace(/\.[^.]+$/, '.pdf'), {
+				returnPromise: true,
+			});
 		} catch (err) {
 			throw err;
 		}
 	}
 
 	private async onFileHasChanged(serverEtag: string) {
-		// const title = t('files_bpm', 'File has changed');
-		// const description = t('files_bpm', 'The file was modified while editing. Do you want to overwrite it, or should your changes be saved with a new filename?');
+		// const title = t('files_bpm_ru', 'File has changed');
+		// const description = t('files_bpm_ru', 'The file was modified while editing. Do you want to overwrite it, or should your changes be saved with a new filename?');
 		// const buttons = {
 		// 	type: OC.dialogs.YES_NO_BUTTONS,
-		// 	confirm: t('files_bpm', 'Overwrite'),
-		// 	cancel: t('files_bpm', 'As new file'),
+		// 	confirm: t('files_bpm_ru', 'Overwrite'),
+		// 	cancel: t('files_bpm_ru', 'As new file'),
 		// };
 
-		return new Promise(resolve => {
-
-
+		return new Promise((resolve) => {
 			// OC.dialogs.confirmDestructive(description, title, buttons, (overwrite) => {
 			// 	if (overwrite) {
 			// 		this.file.etag = serverEtag;
@@ -378,27 +428,32 @@ export default abstract class Editor {
 			// 	resolve(this.onSave());
 			// }, true);
 
-			let newButtons = [{
-				label: 'Overwrite',
-				type: 'primary' as const,
-				callback: () => {
-					this.file.etag = serverEtag;
-					resolve(true);
-				}
-			},
-			{
-				label: 'As new file',
-				callback: () => {
-					this.file.name = this.generateNewFileName();
-					this.file.etag = '';
-					this.getAppContainerElement().find('.bpmn-filename').attr('data-filename', this.file.name);
-					resolve(false);
-				}
-			}
+			let newButtons = [
+				{
+					label: 'Overwrite',
+					type: 'primary' as const,
+					callback: () => {
+						this.file.etag = serverEtag;
+						resolve(true);
+					},
+				},
+				{
+					label: 'As new file',
+					callback: () => {
+						this.file.name = this.generateNewFileName();
+						this.file.etag = '';
+						this.getAppContainerElement()
+							.find('.bpmn-filename')
+							.attr('data-filename', this.file.name);
+						resolve(false);
+					},
+				},
 			];
 			const builder = new DialogBuilder();
-			builder.setName('File has changed')
-			builder.setText('The file was modified while editing. Do you want to overwrite it, or should your changes be saved with a new filename?')
+			builder.setName('File has changed');
+			builder.setText(
+				'The file was modified while editing. Do you want to overwrite it, or should your changes be saved with a new filename?',
+			);
 			builder.setButtons(newButtons);
 			let dialog = builder.build();
 			dialog.show();
@@ -406,25 +461,44 @@ export default abstract class Editor {
 	}
 
 	private async showConfirmClose(): Promise<boolean> {
-		return new Promise(resolve => {
-
-			let newButtons = [{ label: 'Close editor', type: 'primary' as const, callback: () => { resolve(true); } },
-						   { label: 'Abort', callback: () => { resolve(false); } }
+		return new Promise((resolve) => {
+			let newButtons = [
+				{
+					label: 'Close editor',
+					type: 'primary' as const,
+					callback: () => {
+						resolve(true);
+					},
+				},
+				{
+					label: 'Abort',
+					callback: () => {
+						resolve(false);
+					},
+				},
 			];
 			const builder = new DialogBuilder();
-			builder.setName('Discard changes?')
-			builder.setText('You have unsaved changes. Do you really want to close the editor?')
+			builder.setName('Discard changes?');
+			builder.setText(
+				'You have unsaved changes. Do you really want to close the editor?',
+			);
 			builder.setButtons(newButtons);
 			let dialog = builder.build();
 			dialog.show();
 		});
 	}
 
-	protected clickCallbackFactory = (handler: () => Promise<void>, className?: string) => {
+	protected clickCallbackFactory = (
+		handler: () => Promise<void>,
+		className?: string,
+	) => {
 		return (ev: JQuery.ClickEvent<HTMLElement>) => {
 			ev.preventDefault();
 
-			const targetElement = $(ev.target).parents('.entry').length > 0 ? $(ev.target).parents('.entry').first() : $(ev.target);
+			const targetElement =
+				$(ev.target).parents('.entry').length > 0
+					? $(ev.target).parents('.entry').first()
+					: $(ev.target);
 
 			if (targetElement.hasClass('icon-loading')) {
 				return;
@@ -433,39 +507,46 @@ export default abstract class Editor {
 			className && targetElement.removeClass(className);
 			targetElement.addClass('icon-loading');
 
-			handler.call(this).then(() => {
-				targetElement.addClass('icon-checkmark');
+			handler
+				.call(this)
+				.then(() => {
+					targetElement.addClass('icon-checkmark');
 
-				setTimeout(() => {
-					targetElement.removeClass('icon-checkmark');
+					setTimeout(() => {
+						targetElement.removeClass('icon-checkmark');
 
-					className && targetElement.addClass(className);
-				}, 1000);
-			}).catch((error) => {
-				console.log('clickCBFactory Error', error);
-				showError(error.toString())
-				// OC.dialogs.alert(
-				// 	error.toString(),
-				// 	t('files_bpm', 'Error'),
-				// 	() => undefined
-				// );
+						className && targetElement.addClass(className);
+					}, 1000);
+				})
+				.catch((error) => {
+					console.log('clickCBFactory Error', error);
+					showError(error.toString());
+					// OC.dialogs.alert(
+					// 	error.toString(),
+					// 	t('files_bpm_ru', 'Error'),
+					// 	() => undefined
+					// );
 
-				targetElement.addClass('icon-error');
+					targetElement.addClass('icon-error');
 
-				setTimeout(() => {
-					targetElement.removeClass('icon-error');
+					setTimeout(() => {
+						targetElement.removeClass('icon-error');
 
-					className && targetElement.addClass(className);
-				}, 3000);
-			}).then(() => {
-				targetElement.removeClass('icon-loading');
-			});
+						className && targetElement.addClass(className);
+					}, 3000);
+				})
+				.then(() => {
+					targetElement.removeClass('icon-loading');
+				});
 		};
-	}
+	};
 
 	private onBeforeUnload = (ev: BeforeUnloadEvent) => {
 		if (this.hasUnsavedChanges) {
-			const message = t('files_bpm', 'If you leave this page, all your modifications will be lost.');
+			const message = t(
+				'files_bpm_ru',
+				'If you leave this page, all your modifications will be lost.',
+			);
 
 			ev.preventDefault();
 			ev.returnValue = message;
@@ -474,7 +555,7 @@ export default abstract class Editor {
 		}
 
 		return null;
-	}
+	};
 
 	private updateFile(): void {
 		this.fileList?.reload().then(() => {
@@ -486,7 +567,6 @@ export default abstract class Editor {
 
 				this.updateHistoryState();
 			}
-
 		});
 	}
 
@@ -494,7 +574,8 @@ export default abstract class Editor {
 		const nameParts = this.file.name.split('.');
 		const tail = nameParts[nameParts.length - 2];
 
-		nameParts[nameParts.length - 2] = tail.replace(/_\d{13}$/, '') + '_' + (new Date()).getTime().toString();
+		nameParts[nameParts.length - 2] =
+			tail.replace(/_\d{13}$/, '') + '_' + new Date().getTime().toString();
 
 		return nameParts.join('.');
 	}
@@ -508,16 +589,14 @@ export default abstract class Editor {
 
 	protected isDirectoryWritable(): boolean {
 		if (this.fileList)
-			return (this.fileList.getDirectoryPermissions() & OC.PERMISSION_CREATE) !== 0;
-		else
-			return true;
+			return (
+				(this.fileList.getDirectoryPermissions() & OC.PERMISSION_CREATE) !== 0
+			);
+		else return true;
 	}
 
 	protected isRealFileList(): boolean {
-		if (this.fileList)
-			return typeof this.fileList.shown === 'boolean';
-		else
-			return true;
+		if (this.fileList) return typeof this.fileList.shown === 'boolean';
+		else return true;
 	}
-
 }

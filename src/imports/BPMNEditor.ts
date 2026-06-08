@@ -6,6 +6,8 @@ import {
 } from 'bpmn-js-properties-panel';
 import { translate as t } from '@nextcloud/l10n';
 
+import translateModule from './translate';
+
 //@ts-ignore
 import colorPicker from 'bpmn-js-color-picker';
 import copyPasteModule from './copypaste';
@@ -13,7 +15,6 @@ import copyPasteModule from './copypaste';
 import camundaModdleDescriptor from 'camunda-bpmn-moddle/resources/camunda.json';
 import api from './api';
 import Editor from './Editor';
-
 
 import 'bpmn-js/dist/assets/diagram-js.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css';
@@ -37,13 +38,16 @@ import propertiesProvider from './provider';
 import propDescriptor from './descriptors/ncModeler.json';
 
 declare type Modeler = {
-	destroy(): void,
-	on(event: string, callback: (...any) => void): void
-	importXML(xml: string): Promise<{ warnings: string[] }>
-	saveXML(options?: { format?: boolean, preamble?: boolean }): Promise<{ xml: string }>
-	saveSVG(): Promise<{ svg: string }>
-	get(serviceName: string, strict?: boolean): any
-}
+	destroy(): void;
+	on(event: string, callback: (...any) => void): void;
+	importXML(xml: string): Promise<{ warnings: string[] }>;
+	saveXML(options?: {
+		format?: boolean;
+		preamble?: boolean;
+	}): Promise<{ xml: string }>;
+	saveSVG(): Promise<{ svg: string }>;
+	get(serviceName: string, strict?: boolean): any;
+};
 
 const PLAIN_TEMPLATE = `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd" id="sample-diagram" targetNamespace="http://bpmn.io/schema/bpmn">
@@ -60,16 +64,14 @@ const PLAIN_TEMPLATE = `<?xml version="1.0" encoding="UTF-8"?>
 </bpmn2:definitions>`;
 
 export default class BPMNEditor extends Editor {
-
 	private modeler: Modeler | NavigatedViewer;
 
 	protected getContent(): Promise<string> {
 		if (this.modeler) {
-			return this.modeler.saveXML().then(data => data.xml);
+			return this.modeler.saveXML().then((data) => data.xml);
 		}
 
 		if (this.file.etag || OCA.Sharing?.PublicApp) {
-
 			//return api.fileContentFmController(this.file.path, this.file.id ?? 0);
 			return api.getFileContent(this.file.path, this.file.id ?? 0);
 			// if (this.file.path.endsWith('/')) {
@@ -84,7 +86,6 @@ export default class BPMNEditor extends Editor {
 	}
 
 	protected async getSVG(): Promise<string> {
-
 		if (this.modeler) {
 			return (await this.modeler.saveSVG()).svg;
 		}
@@ -98,12 +99,14 @@ export default class BPMNEditor extends Editor {
 		//this.removeResizeListener(this.onResize);
 	}
 	protected async downloadAsPDF(pdf: jsPDF): Promise<void> {
-
 		const canvas = this.modeler.get('canvas');
 		const rootelem = canvas.getRootElement();
 		const elemReg = this.modeler.get('elementRegistry');
-		const mainProc = elemReg
-			.filter(el => isAny(el, ['bpmn:Process', 'bpmn:Collaboration']) && !is(el, 'bpmn:SubProcess'))[0];
+		const mainProc = elemReg.filter(
+			(el) =>
+				isAny(el, ['bpmn:Process', 'bpmn:Collaboration']) &&
+				!is(el, 'bpmn:SubProcess'),
+		)[0];
 
 		if (rootelem.type == 'bpmn:SubProcess') {
 			await canvas.setRootElement(mainProc);
@@ -121,8 +124,14 @@ export default class BPMNEditor extends Editor {
 		//const bounding = svgElement.getBoundingClientRect();
 
 		if (svgElement) {
-			const width = svgElement.width.baseVal.value < 620 ? svgElement.width.baseVal.value - 30 : 600;
-			const height = svgElement.height.baseVal.value < 375 ? svgElement.height.baseVal.value - 30 : 375;
+			const width =
+				svgElement.width.baseVal.value < 620
+					? svgElement.width.baseVal.value - 30
+					: 600;
+			const height =
+				svgElement.height.baseVal.value < 375
+					? svgElement.height.baseVal.value - 30
+					: 375;
 			await pdf.svg(svgElement, {
 				x: 15,
 				y: 45,
@@ -133,8 +142,9 @@ export default class BPMNEditor extends Editor {
 
 		//get subprocesses
 
-		const subprocesses = elemReg.filter(el => el.type === 'bpmn:SubProcess' && el.hasOwnProperty('layer'));
-
+		const subprocesses = elemReg.filter(
+			(el) => el.type === 'bpmn:SubProcess' && el.hasOwnProperty('layer'),
+		);
 
 		for (let i = 0; i < subprocesses.length; i++) {
 			const svgContainer = $('<div>');
@@ -151,8 +161,14 @@ export default class BPMNEditor extends Editor {
 				pdf.addPage('a4', 'landscape');
 				pdf.text(subprocesses[i].di.bpmnElement.name, 15, 30);
 
-				const width = subsvg.width.baseVal.value < 620 ? subsvg.width.baseVal.value - 30 : 600;
-				const height = subsvg.height.baseVal.value < 375 ? subsvg.height.baseVal.value - 30 : 375;
+				const width =
+					subsvg.width.baseVal.value < 620
+						? subsvg.width.baseVal.value - 30
+						: 600;
+				const height =
+					subsvg.height.baseVal.value < 375
+						? subsvg.height.baseVal.value - 30
+						: 375;
 
 				await pdf.svg(subsvg, {
 					x: 15,
@@ -168,7 +184,6 @@ export default class BPMNEditor extends Editor {
 
 	//helper method for getting the extension element values?
 	private extElemHelper = (xml: string) => {
-
 		const extensionDict = new Map<string, Array<[string, string]>>();
 
 		const parser = new DOMParser();
@@ -181,7 +196,10 @@ export default class BPMNEditor extends Editor {
 			const children = new Array<[string, string]>();
 			const childArray = elements[i].getElementsByTagName('nc:property');
 			for (let j = 0; j < childArray.length; j++) {
-				children.push([childArray[j].getAttribute('name') ?? 'na', childArray[j].getAttribute('value') ?? '']);
+				children.push([
+					childArray[j].getAttribute('name') ?? 'na',
+					childArray[j].getAttribute('value') ?? '',
+				]);
 			}
 			extensionDict.set(parent, children);
 		}
@@ -189,7 +207,6 @@ export default class BPMNEditor extends Editor {
 	};
 
 	protected async runEditor(): Promise<void> {
-
 		let bpmnXML = await this.getContent();
 		if (!bpmnXML || bpmnXML == '') {
 			bpmnXML = PLAIN_TEMPLATE;
@@ -203,15 +220,19 @@ export default class BPMNEditor extends Editor {
 			const elements = modeler.get('elementRegistry');
 
 			elements.forEach(function (element) {
-
-				const extensionParent = getBusinessObject(element).extensionElements || moddle.create('bpmn:ExtensionElements');
+				const extensionParent =
+					getBusinessObject(element).extensionElements ||
+					moddle.create('bpmn:ExtensionElements');
 				if (!extensionParent.values) {
 					extensionParent.values = [];
 				}
 				const extProperties = extensionElementsDict.get(element.id) || [];
 				for (let i = 0; i < extProperties.length; i++) {
 					const prop = extProperties[i];
-					const property = moddle.create('nc:property', { name: prop[0], value: prop[1] });
+					const property = moddle.create('nc:property', {
+						name: prop[0],
+						value: prop[1],
+					});
 					extensionParent.get('values').push(property);
 				}
 			});
@@ -224,40 +245,44 @@ export default class BPMNEditor extends Editor {
 
 	private onResize = () => {
 		this.modeler && this.modeler.get('canvas').resized();
-	}
+	};
 
 	private getModeler() {
 		if (!this.modeler) {
 			const containerElement = this.getAppContainerElement();
 			const canvasElement = containerElement.find('.bpmn-canvas')[0]; //[0] will return the HTMLElement; otherwise this function returns JQuery<HTMLElement>
 			const propertiesElement = containerElement.find('.bpmn-properties');
-			this.modeler = this.isFileUpdatable() ? new BPMNModeler({
-				container: canvasElement,
-				additionalModules: [
-					BpmnPropertiesPanelModule,
-					BpmnPropertiesProviderModule,
-					propertiesProvider,
-					colorPicker,
-					copyPasteModule
-				],
-				propertiesPanel: {
-					parent: propertiesElement,
-					layout: {
-						open: true,
-						groups: {
-							general: { open: true },
-							documentation: { open: true },
-							nc: { open: true },
+			this.modeler = this.isFileUpdatable()
+				? new BPMNModeler({
+						container: canvasElement,
+						additionalModules: [
+							BpmnPropertiesPanelModule,
+							BpmnPropertiesProviderModule,
+							propertiesProvider,
+							colorPicker,
+							copyPasteModule,
+							translateModule,
+						],
+						propertiesPanel: {
+							parent: propertiesElement,
+							layout: {
+								open: true,
+								groups: {
+									general: { open: true },
+									documentation: { open: true },
+									nc: { open: true },
+								},
+							},
 						},
-					},
-				},
-				moddleExtensions: {
-					camunda: camundaModdleDescriptor,
-					nc: propDescriptor,
-				},
-			}) : new NavigatedViewer({
-				container: canvasElement
-			});
+						moddleExtensions: {
+							camunda: camundaModdleDescriptor,
+							nc: propDescriptor,
+						},
+					})
+				: new NavigatedViewer({
+						container: canvasElement,
+						additionalModules: [translateModule],
+					});
 			this.modeler.on('element.changed', (e) => {
 				if (!this.hasUnsavedChanges) {
 					this.hasUnsavedChanges = true;
@@ -267,7 +292,6 @@ export default class BPMNEditor extends Editor {
 				this.updateOverlay(e);
 			});
 			if (openPropertiesPanel) {
-
 				$('<div>')
 					.addClass('entry close icon-close propertiespanel-close')
 					.attr('role', 'button')
@@ -275,7 +299,6 @@ export default class BPMNEditor extends Editor {
 					.appendTo(propertiesElement);
 				console.log('appended a close button');
 			}
-
 		}
 		return this.modeler;
 	}
@@ -288,7 +311,14 @@ export default class BPMNEditor extends Editor {
 	private updateOverlay(ev) {
 		console.log('updating overlays');
 		const element = ev.element;
-		if (isAny(element, ['bpmn:CallActivity', 'bpmn:DataStoreReference', 'bpmn:DataObjectReference']) &&! (element.type == 'label' )) {
+		if (
+			isAny(element, [
+				'bpmn:CallActivity',
+				'bpmn:DataStoreReference',
+				'bpmn:DataObjectReference',
+			]) &&
+			!(element.type == 'label')
+		) {
 			console.log(element);
 			try {
 				const overlays = this.modeler.get('overlays');
@@ -299,14 +329,19 @@ export default class BPMNEditor extends Editor {
 				if (!extValues) {
 					return;
 				}
-				let modelUrl = extValues.values?.find(a => ['bpmnModel', 'dataSource'].indexOf(a.name) >= 0)?.value;
+				let modelUrl = extValues.values?.find(
+					(a) => ['bpmnModel', 'dataSource'].indexOf(a.name) >= 0,
+				)?.value;
 				if (!modelUrl) {
 					return;
 				}
 				modelUrl = modelUrl.replace('https://', '');
 				modelUrl = modelUrl.replace('https//', '');
 
-				if (element.type == 'bpmn:CallActivity' || element.type == 'bpmn:callActivity') {
+				if (
+					element.type == 'bpmn:CallActivity' ||
+					element.type == 'bpmn:callActivity'
+				) {
 					const htmlOverlay = `<a href="https://${modelUrl}" class="djs-overlay djs-overlay-drilldown link-overlay" target="_blank"><i class="fa-solid fa-link"></i></a>`;
 					overlays.add(element.id, 'drilldown', {
 						position: {
@@ -330,7 +365,6 @@ export default class BPMNEditor extends Editor {
 						html: htmlOverlay,
 					});
 				}
-
 			} catch (e) {
 				//These overlays are just helpful, so it's better to skip any that break without warning the user
 				console.error('non-breaking error: ');
@@ -343,8 +377,14 @@ export default class BPMNEditor extends Editor {
 		const elements = this.modeler.get('elementRegistry');
 		const overlays = this.modeler.get('overlays');
 		elements.forEach(function (element) {
-
-			if (isAny(element, ['bpmn:CallActivity', 'bpmn:DataStoreReference', 'bpmn:DataObjectReference']) && ! (element.type == 'label')) {
+			if (
+				isAny(element, [
+					'bpmn:CallActivity',
+					'bpmn:DataStoreReference',
+					'bpmn:DataObjectReference',
+				]) &&
+				!(element.type == 'label')
+			) {
 				try {
 					console.log(element);
 					const extValues = element.businessObject?.extensionElements;
@@ -353,7 +393,9 @@ export default class BPMNEditor extends Editor {
 					}
 					overlays.remove({ element: element.id });
 
-					let modelUrl = extValues.values?.find(a => ['bpmnModel', 'dataSource'].indexOf(a.name) >= 0)?.value;
+					let modelUrl = extValues.values?.find(
+						(a) => ['bpmnModel', 'dataSource'].indexOf(a.name) >= 0,
+					)?.value;
 					if (!modelUrl) {
 						return;
 					}
@@ -361,7 +403,10 @@ export default class BPMNEditor extends Editor {
 					modelUrl = modelUrl.replace('https://', '');
 					modelUrl = modelUrl.replace('https//', '');
 
-					if (element.type == 'bpmn:CallActivity' || element.type == 'bpmn:callActivity') {
+					if (
+						element.type == 'bpmn:CallActivity' ||
+						element.type == 'bpmn:callActivity'
+					) {
 						const htmlOverlay = `<a href="https://${modelUrl}" class="djs-overlay djs-overlay-drilldown link-overlay" target="_blank"><i class="fa-solid fa-link"></i></a>`;
 
 						overlays.add(element.id, 'drilldown', {
@@ -403,7 +448,9 @@ export default class BPMNEditor extends Editor {
 		// if (newcontainer) {
 		//const groupElement = $('#modeler-actions-group');
 		if (newcontainer && this.isFileUpdatable()) {
-			const actionsgroup = document.getElementById('modeler-actions-group') ?? $('#modeler-actions-group');
+			const actionsgroup =
+				document.getElementById('modeler-actions-group') ??
+				$('#modeler-actions-group');
 			$('<div>', { id: 'propertiesToggle' })
 				.attr('role', 'button')
 				.addClass('entry')
@@ -415,13 +462,11 @@ export default class BPMNEditor extends Editor {
 		return containerElement;
 	}
 
-
-
 	private toggleProperties = (ev: JQuery.ClickEvent) => {
-
 		openPropertiesPanel = !openPropertiesPanel;
 
-		const propertiesElement = this.getAppContainerElement().find('.bpmn-properties');
+		const propertiesElement =
+			this.getAppContainerElement().find('.bpmn-properties');
 		propertiesElement.toggleClass('hidden');
 		// if (openPropertiesPanel) {
 		// 	propertiesElement.removeClass('hidden');
@@ -429,6 +474,5 @@ export default class BPMNEditor extends Editor {
 		// 	propertiesElement.addClass('hidden');
 		// 	//
 		// }
-	}
-
+	};
 }

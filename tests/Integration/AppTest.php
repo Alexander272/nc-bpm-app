@@ -1,6 +1,6 @@
 <?php
 
-namespace OCA\FilesBpm\Tests\Integration;
+namespace OCA\FilesBpmRU\Tests\Integration;
 
 use OCP\App\IAppManager;
 use OCP\AppFramework\App;
@@ -16,15 +16,15 @@ class AppTest extends TestCase {
 
 	public function setUp(): void {
 		parent::setUp();
-		$app = new App('files_bpm');
+		$app = new App('files_bpm_ru');
 		$this->container = $app->getContainer();
 	}
 
 	public function testAppInstalled() {
 		/** @var IAppManager */
 		$appManager = $this->container->query(IAppManager::class);
-		$appManager->enableApp('files_bpm');
+		$appManager->enableApp('files_bpm_ru');
 
-		$this->assertTrue($appManager->isInstalled('files_bpm'));
+		$this->assertTrue($appManager->isInstalled('files_bpm_ru'));
 	}
 }

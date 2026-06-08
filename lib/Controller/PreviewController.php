@@ -1,6 +1,6 @@
 <?php
 
-namespace OCA\FilesBpm\Controller;
+namespace OCA\FilesBpmRU\Controller;
 
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\DataResponse;

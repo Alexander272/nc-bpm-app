@@ -4,7 +4,7 @@ use OCP\Util;
 
 // SPDX-FileCopyrightText: Kirsten Hauck <kirstenhauck@proton.me>
 // SPDX-License-Identifier: AGPL-3.0-or-later
-  $appId = OCA\FilesBpm\AppInfo\Application::APP_ID;
+  $appId = OCA\FilesBpmRU\AppInfo\Application::APP_ID;
   
   Util::addScript($appId, 'main');
 ?>

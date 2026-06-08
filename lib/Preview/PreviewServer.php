@@ -1,8 +1,8 @@
 <?php
 
-namespace OCA\FilesBpm\Preview;
+namespace OCA\FilesBpmRU\Preview;
 
-use OCA\FilesBpm\AppInfo\Application;
+use OCA\FilesBpmRU\AppInfo\Application;
 use OCP\Files\File;
 use OCP\Files\FileInfo;
 use OCP\IConfig;

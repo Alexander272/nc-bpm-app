@@ -1,4 +1,4 @@
-var process = { platform: '', env: '' }
+var process = { platform: '', env: '' };
 console.log("Help, I'm being repressed!");
 
 import { translate as t } from '@nextcloud/l10n';
@@ -14,7 +14,6 @@ import 'bpmn-js/dist/assets/bpmn-js.css';
 import '@fortawesome/fontawesome-free/js/all.js';
 import '@fortawesome/fontawesome-free/js/solid.js';
 
-
 import './imports/Editor.scss';
 import './imports/BPMNEditor';
 import './imports/DMNEditor';
@@ -22,7 +21,12 @@ import './imports/CMMNEditor';
 import './imports/Editor';
 
 import type { IFileAction } from '@nextcloud/files';
-import { addNewFileMenuEntry, DefaultType, getNavigation, registerFileAction } from '@nextcloud/files';
+import {
+	addNewFileMenuEntry,
+	DefaultType,
+	getNavigation,
+	registerFileAction,
+} from '@nextcloud/files';
 import './filelist.scss';
 
 const bpmnicon = require('../img/icon-filetypes_bpmn.svg');
@@ -41,23 +45,32 @@ function fixFileIconForFileShare() {
 	const mime = $('#mimetype').val();
 
 	if (!dir && mime === 'application/x-bpmn') {
-		$('#mimetypeIcon').val(bpmnicon); //OC.imagePath('files_bpm', 'icon-filetypes_bpmn.svg'));
+		$('#mimetypeIcon').val(bpmnicon); //OC.imagePath('files_bpm_ru', 'icon-filetypes_bpmn.svg'));
 	}
 
 	if (!dir && mime === 'application/x-dmn') {
-		$('#mimetypeIcon').val(dmnicon);//OC.imagePath('files_bpm', 'icon-filetypes_dmn.svg'));
+		$('#mimetypeIcon').val(dmnicon); //OC.imagePath('files_bpm_ru', 'icon-filetypes_dmn.svg'));
 	}
 
 	if (!dir && mime === 'application/x-cmmn') {
-		$('#mimetypeIcon').val(cmmnicon);//OC.imagePath('files_bpm', 'icon-filetypes_dmn.svg'));
+		$('#mimetypeIcon').val(cmmnicon); //OC.imagePath('files_bpm_ru', 'icon-filetypes_dmn.svg'));
 	}
 }
 
 function registerFileIcon() {
 	if (OC?.MimeType?._mimeTypeIcons) {
-		OC.MimeType._mimeTypeIcons['application/x-bpmn'] = OC.imagePath('files_bpm', 'icon-filetypes_bpmn.svg');
-		OC.MimeType._mimeTypeIcons['application/x-dmn'] = OC.imagePath('files_bpm', 'icon-filetypes_dmn.svg');
-		OC.MimeType._mimeTypeIcons['application/x-cmmn'] = OC.imagePath('files_bpm', 'icon-filetypes_cmmn.svg');
+		OC.MimeType._mimeTypeIcons['application/x-bpmn'] = OC.imagePath(
+			'files_bpm_ru',
+			'icon-filetypes_bpmn.svg',
+		);
+		OC.MimeType._mimeTypeIcons['application/x-dmn'] = OC.imagePath(
+			'files_bpm_ru',
+			'icon-filetypes_dmn.svg',
+		);
+		OC.MimeType._mimeTypeIcons['application/x-cmmn'] = OC.imagePath(
+			'files_bpm_ru',
+			'icon-filetypes_cmmn.svg',
+		);
 	}
 }
 
@@ -65,7 +78,13 @@ function registerFileIcon() {
 async function createDiagram(folder, ext) {
 	//const content = await this.getContent();
 	const path = folder.path;
-	const filename = 'New-' + ext.toUpperCase() + '-file-' + (new Date()).getTime().toString() + '.' + ext;
+	const filename =
+		'New-' +
+		ext.toUpperCase() +
+		'-file-' +
+		new Date().getTime().toString() +
+		'.' +
+		ext;
 	try {
 		const result = await api.uploadFile(path, filename, '');
 
@@ -74,11 +93,10 @@ async function createDiagram(folder, ext) {
 		}
 	} catch (e) {
 		console.error(e);
-		showError('Error creating new file');
+		showError('Ошибка создания нового файла');
 		return false;
 	}
 }
-
 
 //NB: Nextcloud changed the file API in version 28, so the previous filemenu actions are no longer compatible
 if (parseInt(OC.config.version.substring(0, 2)) >= 28) {
@@ -88,22 +106,22 @@ if (parseInt(OC.config.version.substring(0, 2)) >= 28) {
 			mime: 'application/x-bpmn',
 			type: 'text',
 			css: 'icon-filetype-bpmn',
-			icon: bpmnicon,//'../img/icon-filetypes_bpmn.svg',
-			newStr: 'New BPMN File',
+			icon: bpmnicon, //'../img/icon-filetypes_bpmn.svg',
+			newStr: 'Новый BPMN файл',
 		},
 		dmn: {
 			mime: 'application/x-dmn',
 			type: 'text',
 			css: 'icon-filetype-dmn',
-			icon: dmnicon, //OC.imagePath('files_bpm', 'icon-filetypes_bpmn.svg'),
-			newStr: 'New DMN File',
+			icon: dmnicon, //OC.imagePath('files_bpm_ru', 'icon-filetypes_bpmn.svg'),
+			newStr: 'Новый DMN файл',
 		},
 		cmmn: {
 			mime: 'application/x-cmmn',
 			type: 'text',
 			css: 'icon-filetype-cmmn',
-			icon: cmmnicon, //OC.imagePath('files_bpm', 'icon-filetypes_bpmn.svg'),
-			newStr: 'New CMMN File',
+			icon: cmmnicon, //OC.imagePath('files_bpm_ru', 'icon-filetypes_bpmn.svg'),
+			newStr: 'Новый CMMN файл',
 		},
 	};
 	registerFileIcon();
@@ -112,10 +130,14 @@ if (parseInt(OC.config.version.substring(0, 2)) >= 28) {
 		const action: IFileAction = {
 			id: ext,
 			displayName() {
-				return 'Open in ' + ext.toUpperCase() + ' Editor';
+				return 'Открыть в ' + ext.toUpperCase() + ' редакторе';
 			},
 			enabled({ nodes }) {
-				return nodes.length === 1 && attr.mime === nodes[0].mime && (nodes[0].permissions & OC.PERMISSION_READ) !== 0;
+				return (
+					nodes.length === 1 &&
+					attr.mime === nodes[0].mime &&
+					(nodes[0].permissions & OC.PERMISSION_READ) !== 0
+				);
 			},
 			iconSvgInline: () => attr.icon,
 			async exec(context) {
@@ -126,7 +148,14 @@ if (parseInt(OC.config.version.substring(0, 2)) >= 28) {
 
 				const dirName = file.dirname;
 
-				window.location.href = OC.generateUrl('/apps/' + 'files_bpm/?' + 'dir=' + dirName + '&fileId=' + file.fileid);
+				window.location.href = OC.generateUrl(
+					'/apps/' +
+						'files_bpm_ru/?' +
+						'dir=' +
+						dirName +
+						'&fileId=' +
+						file.fileid,
+				);
 				return true;
 			},
 			default: DefaultType.HIDDEN,
@@ -143,7 +172,7 @@ if (parseInt(OC.config.version.substring(0, 2)) >= 28) {
 			async handler(folder) {
 				//Generate new BPMN/DMN diagram
 				if (!window.OC.getCurrentUser().uid) {
-					alert("Not yet implemented.");
+					alert('Не реализовано. Not yet implemented.');
 				} else {
 					try {
 						const returnValue = await createDiagram(folder, ext);
@@ -165,89 +194,93 @@ if (parseInt(OC.config.version.substring(0, 2)) >= 28) {
 
 		addMenuEntry(ext, Mimes[ext]);
 	}
-}
-
-else {  // Nextcloud versions lower than 28
+} else {
+	// Nextcloud versions lower than 28
 	function startBPMNEditor(file, fileList) {
-		import(/* webpackChunkName: "bpmn-editor" */ './imports/BPMNEditor').then(({ default: Editor }) => {
-			const editor = new Editor(file, fileList);
-			console.log('Starting BPMN editor');
-			editor.start();
-		});
+		import(/* webpackChunkName: "bpmn-editor" */ './imports/BPMNEditor').then(
+			({ default: Editor }) => {
+				const editor = new Editor(file, fileList);
+				console.log('Запуск BPMN редактора');
+				editor.start();
+			},
+		);
 	}
 
 	function startDMNEditor(file, fileList) {
-		import(/* webpackChunkName: "dmn-editor" */ './imports/DMNEditor').then(({ default: Editor }) => {
-			const editor = new Editor(file, fileList);
-			console.log('Starting DMN editor');
-			editor.start();
-		});
+		import(/* webpackChunkName: "dmn-editor" */ './imports/DMNEditor').then(
+			({ default: Editor }) => {
+				const editor = new Editor(file, fileList);
+				console.log('Запуск DMN редактора');
+				editor.start();
+			},
+		);
 	}
 	function startCMMNEditor(file, fileList) {
-		import(/* webpackChunkName: "dmn-editor" */ './imports/CMMNEditor').then(({ default: Editor }) => {
-			const editor = new Editor(file, fileList);
-			console.log('Starting CMMN editor');
-			editor.start();
-		});
+		import(/* webpackChunkName: "dmn-editor" */ './imports/CMMNEditor').then(
+			({ default: Editor }) => {
+				const editor = new Editor(file, fileList);
+				console.log('Запуск CMMN редактора');
+				editor.start();
+			},
+		);
 	}
 
 	const BpmFileMenuPlugin = {
 		attach: function (menu) {
 			menu.addMenuEntry({
 				id: 'bpmn',
-				displayName: t('files_bpm', 'New BPMN diagram'),
-							  templateName: 'diagram.bpmn',
-							  iconClass: 'icon-filetype-bpmn',
-							  fileType: 'file',
-							  actionHandler(fileName: string) {
+				displayName: t('files_bpm_ru', 'Новая BPMN диаграмма'),
+				templateName: 'diagram.bpmn',
+				iconClass: 'icon-filetype-bpmn',
+				fileType: 'file',
+				actionHandler(fileName: string) {
+					const fileList = menu.fileList;
+					const file = {
+						name: fileName,
+						path: fileList.getCurrentDirectory(),
+						permissions: OC.PERMISSION_CREATE | OC.PERMISSION_UPDATE,
+					};
 
-								  const fileList = menu.fileList;
-								  const file = {
-									  name: fileName,
-									  path: fileList.getCurrentDirectory(),
-							  permissions: OC.PERMISSION_CREATE | OC.PERMISSION_UPDATE,
-								  };
-
-								  startBPMNEditor(file, fileList);
-							  },
+					startBPMNEditor(file, fileList);
+				},
 			});
 
 			menu.addMenuEntry({
 				id: 'dmn',
-				displayName: t('files_bpm', 'New DMN diagram'),
-							  templateName: 'diagram.dmn',
-							  iconClass: 'icon-filetype-dmn',
-							  fileType: 'file',
-							  actionHandler(fileName: string) {
-								  const fileList = menu.fileList;
+				displayName: t('files_bpm_ru', 'Новая DMN диаграмма'),
+				templateName: 'diagram.dmn',
+				iconClass: 'icon-filetype-dmn',
+				fileType: 'file',
+				actionHandler(fileName: string) {
+					const fileList = menu.fileList;
 
-								  const file = {
-									  name: fileName,
-									  path: fileList.getCurrentDirectory(),
-							  permissions: OC.PERMISSION_CREATE | OC.PERMISSION_UPDATE,
-								  };
+					const file = {
+						name: fileName,
+						path: fileList.getCurrentDirectory(),
+						permissions: OC.PERMISSION_CREATE | OC.PERMISSION_UPDATE,
+					};
 
-								  startDMNEditor(file, fileList);
-							  },
+					startDMNEditor(file, fileList);
+				},
 			});
 
 			menu.addMenuEntry({
 				id: 'cmmn',
-				displayName: t('files_bpm', 'New CMMN diagram'),
-							  templateName: 'diagram.cmmn',
-							  iconClass: 'icon-filetype-cmmn',
-							  fileType: 'file',
-							  actionHandler(fileName: string) {
-								  const fileList = menu.fileList;
+				displayName: t('files_bpm_ru', 'Новая CMMN диаграмма'),
+				templateName: 'diagram.cmmn',
+				iconClass: 'icon-filetype-cmmn',
+				fileType: 'file',
+				actionHandler(fileName: string) {
+					const fileList = menu.fileList;
 
-								  const file = {
-									  name: fileName,
-									  path: fileList.getCurrentDirectory(),
-							  permissions: OC.PERMISSION_CREATE | OC.PERMISSION_UPDATE,
-								  };
+					const file = {
+						name: fileName,
+						path: fileList.getCurrentDirectory(),
+						permissions: OC.PERMISSION_CREATE | OC.PERMISSION_UPDATE,
+					};
 
-								  startCMMNEditor(file, fileList);
-							  },
+					startCMMNEditor(file, fileList);
+				},
 			});
 		},
 	};
@@ -255,9 +288,7 @@ else {  // Nextcloud versions lower than 28
 	OC.Plugins.register('OCA.Files.NewFileMenu', BpmFileMenuPlugin);
 
 	const BpmFileListPlugin = {
-		ignoreLists: [
-			'trashbin',
-		],
+		ignoreLists: ['trashbin'],
 
 		attach(fileList) {
 			registerFileIcon();
@@ -268,46 +299,52 @@ else {  // Nextcloud versions lower than 28
 
 			fileList.fileActions.registerAction({
 				name: 'bpmn',
-				displayName: t('files_bpm', 'BPMN diagram'),
-												mime: 'application/x-bpmn',
-												icon: OC.imagePath('files_bpm', 'icon-filetypes_bpmn.svg'),
-												permissions: OC.PERMISSION_READ,
-												actionHandler(fileName: string, context) {
-													const file = context.fileList.elementToFile(context.$file);
+				displayName: t('files_bpm_ru', 'BPMN диаграмма'),
+				mime: 'application/x-bpmn',
+				icon: OC.imagePath('files_bpm_ru', 'icon-filetypes_bpmn.svg'),
+				permissions: OC.PERMISSION_READ,
+				actionHandler(fileName: string, context) {
+					// const file = context.fileList.elementToFile(context.$file);
 
-													startBPMNEditor(file, context.fileList);
-												},
+					const fileList = context.fileList || window.OCA.Files.App.fileList;
+					const file = fileList.elementToFile(context.$file);
+
+					startBPMNEditor(file, context.fileList);
+				},
 			});
 
 			fileList.fileActions.setDefault('application/x-bpmn', 'bpmn');
 
 			fileList.fileActions.registerAction({
 				name: 'dmn',
-				displayName: t('files_bpm', 'DMN diagram'),
-												mime: 'application/x-dmn',
-												icon: OC.imagePath('files_bpm', 'icon-filetypes_dmn.svg'),
-												permissions: OC.PERMISSION_READ,
-												actionHandler(fileName: string, context) {
-													const file = context.fileList.elementToFile(context.$file);
+				displayName: t('files_bpm_ru', 'DMN диаграмма'),
+				mime: 'application/x-dmn',
+				icon: OC.imagePath('files_bpm_ru', 'icon-filetypes_dmn.svg'),
+				permissions: OC.PERMISSION_READ,
+				actionHandler(fileName: string, context) {
+					// const file = context.fileList.elementToFile(context.$file);
+					const fileList = context.fileList || window.OCA.Files.App.fileList;
+					const file = fileList.elementToFile(context.$file);
 
-													startDMNEditor(file, context.fileList);
-												},
+					startDMNEditor(file, context.fileList);
+				},
 			});
 
 			fileList.fileActions.setDefault('application/x-dmn', 'dmn');
 
-
 			fileList.fileActions.registerAction({
 				name: 'cmmn',
-				displayName: t('files_bpm', 'CMMN diagram'),
-												mime: 'application/x-cmmn',
-												icon: OC.imagePath('files_bpm', 'icon-filetypes_cmmn.svg'),
-												permissions: OC.PERMISSION_READ,
-												actionHandler(fileName: string, context) {
-													const file = context.fileList.elementToFile(context.$file);
+				displayName: t('files_bpm_ru', 'CMMN диаграмма'),
+				mime: 'application/x-cmmn',
+				icon: OC.imagePath('files_bpm_ru', 'icon-filetypes_cmmn.svg'),
+				permissions: OC.PERMISSION_READ,
+				actionHandler(fileName: string, context) {
+					// const file = context.fileList.elementToFile(context.$file);
+					const fileList = context.fileList || window.OCA.Files.App.fileList;
+					const file = fileList.elementToFile(context.$file);
 
-													startDMNEditor(file, context.fileList);
-												},
+					startDMNEditor(file, context.fileList);
+				},
 			});
 
 			fileList.fileActions.setDefault('application/x-cmmn', 'cmmn');
@@ -317,7 +354,6 @@ else {  // Nextcloud versions lower than 28
 	OC.Plugins.register('OCA.Files.FileList', BpmFileListPlugin);
 	bootstrapFileShare();
 	fixFileIconForFileShare();
-
 }
 
 bootstrapFileShare();

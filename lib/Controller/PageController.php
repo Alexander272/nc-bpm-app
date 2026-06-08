@@ -1,5 +1,5 @@
 <?php
-namespace OCA\FilesBpm\Controller;
+namespace OCA\FilesBpmRU\Controller;
 
 use OCP\IRequest;
 use OCP\AppFramework\Http\TemplateResponse;

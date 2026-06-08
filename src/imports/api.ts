@@ -3,17 +3,18 @@ import axios from '@nextcloud/axios';
 import { generateUrl } from '@nextcloud/router';
 
 import { NextcloudFile } from './Editor';
-import { showError } from '@nextcloud/dialogs'
-import {emit} from '@nextcloud/event-bus'
+import { showError } from '@nextcloud/dialogs';
+import { emit } from '@nextcloud/event-bus';
 
 class Api {
-	public async checkPreviewServer(serverUrl: string): Promise<'success' | 'invalid-url'> {
-		const url = OC.generateUrl('apps/files_bpm/preview/check');
+	public async checkPreviewServer(
+		serverUrl: string,
+	): Promise<'success' | 'invalid-url'> {
+		const url = OC.generateUrl('apps/files_bpm_ru/preview/check');
 		const response = await axios.post(url, { url: serverUrl });
 
 		return response.data.result;
 	}
-
 
 	// public async getFileContent(path: string, name: string): Promise<string> {
 	// 	const fullPath = this.getDownloadPath(path, name);
@@ -23,14 +24,15 @@ class Api {
 	// }
 
 	public async getFileContent(path: string, fileId: number): Promise<string> {
-		if(fileId == 0){
+		if (fileId == 0) {
 			showError('File ID is missing!');
 		}
-		var url = generateUrl('/apps/files_bpm/page/getFileContent?fileId=' + fileId);
+		var url = generateUrl(
+			'/apps/files_bpm_ru/page/getFileContent?fileId=' + fileId,
+		);
 		const response = await axios.get(url);
 		return response.data;
 	}
-
 
 	public getDownloadPath(path: string, name: string): string {
 		path = encodeURI(path);
@@ -42,9 +44,17 @@ class Api {
 		return generateRemoteUrl(`files${path}/${name}`);
 	}
 
-	public async uploadFile(path: string, name: string, data: any, etag?: string, contentType = 'text/xml') {
+	public async uploadFile(
+		path: string,
+		name: string,
+		data: any,
+		etag?: string,
+		contentType = 'text/xml',
+	) {
 		const base = this.getUploadBase();
-		const fullPath = OCA.Sharing?.PublicApp ? base : base + OC.joinPaths('/', path, name);
+		const fullPath = OCA.Sharing?.PublicApp
+			? base
+			: base + OC.joinPaths('/', path, name);
 
 		const headers = {
 			'Content-Type': contentType,
@@ -56,13 +66,14 @@ class Api {
 		}
 
 		if ($('#sharingToken').val()) {
-			headers['Authorization'] = 'Basic ' + btoa($('#sharingToken').val() + ':');
+			headers['Authorization'] =
+				'Basic ' + btoa($('#sharingToken').val() + ':');
 		}
 
 		let response;
 
 		try {
-			response = await axios.put (fullPath, data, {
+			response = await axios.put(fullPath, data, {
 				headers,
 			});
 		} catch (error) {
@@ -91,7 +102,14 @@ class Api {
 	}
 
 	public generatePublicUrl(service: string) {
-		return window.location.protocol + '//' + window.location.host + getRootUrl() + '/public.php/' + service;
+		return (
+			window.location.protocol +
+			'//' +
+			window.location.host +
+			getRootUrl() +
+			'/public.php/' +
+			service
+		);
 	}
 
 	private parseEtag(etag: string): string {
@@ -102,13 +120,13 @@ class Api {
 	}
 
 	public async getFileInfo(fileId: string): Promise<NextcloudFile> {
-
-		var url = generateUrl('/apps/files_bpm/page/getFileInfo?fileId=' + fileId);
-		//var url = generateUrl('/apps/files_bpm/page/testDummy');
+		var url = generateUrl(
+			'/apps/files_bpm_ru/page/getFileInfo?fileId=' + fileId,
+		);
+		//var url = generateUrl('/apps/files_bpm_ru/page/testDummy');
 		const response = await axios.get(url);
 		return response.data;
 	}
-
 }
 
 const api = new Api();

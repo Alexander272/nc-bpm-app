@@ -1,6 +1,6 @@
 <?php
 
-namespace OCA\FilesBpm\Preview;
+namespace OCA\FilesBpmRU\Preview;
 
 use OCP\Preview\IProviderV2;
 

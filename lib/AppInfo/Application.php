@@ -1,12 +1,12 @@
 <?php
 
-namespace OCA\FilesBpm\AppInfo;
+namespace OCA\FilesBpmRU\AppInfo;
 
 use OCA\Files\Event\LoadAdditionalScriptsEvent;
 use OCA\Files_Sharing\Event\BeforeTemplateRenderedEvent;
-use OCA\FilesBpm\Listener\LoadAdditionalScriptsListener;
-use OCA\FilesBpm\Preview\BPMN;
-use OCA\FilesBpm\Preview\DMN;
+use OCA\FilesBpmRU\Listener\LoadAdditionalScriptsListener;
+use OCA\FilesBpmRU\Preview\BPMN;
+use OCA\FilesBpmRU\Preview\DMN;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -14,7 +14,7 @@ use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\IPreview;
 
 class Application extends App implements IBootstrap {
-	public const APP_ID = 'files_bpm';
+	public const APP_ID = 'files_bpm_ru';
 
 	/**
 	 * @param array $params
