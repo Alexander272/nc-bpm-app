@@ -6,6 +6,23 @@ import { NextcloudFile } from './Editor';
 import { showError } from '@nextcloud/dialogs';
 import { emit } from '@nextcloud/event-bus';
 
+function getSharingToken(): string {
+	// 1. Проверяем, есть ли токен в параметрах URL (когда мы уже внутри редактора)
+	const urlParams = new URLSearchParams(window.location.search);
+	const tokenFromParam = urlParams.get('sharingToken');
+	if (tokenFromParam) {
+		return tokenFromParam;
+	}
+
+	// 2. Если нет в параметрах, ищем в пути публичной папки (когда мы еще в списке файлов)
+	const isPublic = window.location.pathname.indexOf('/s/') !== -1;
+	if (isPublic) {
+		return window.location.pathname.split('/').pop() || '';
+	}
+
+	return '';
+}
+
 class Api {
 	public async checkPreviewServer(
 		serverUrl: string,
@@ -27,9 +44,16 @@ class Api {
 		if (fileId == 0) {
 			showError('File ID is missing!');
 		}
-		var url = generateUrl(
-			'/apps/files_bpm_ru/page/getFileContent?fileId=' + fileId,
-		);
+
+		const token = getSharingToken();
+
+		let pathWithParams =
+			'/apps/files_bpm_ru/page/getFileContent?fileId=' + fileId;
+		if (token) {
+			pathWithParams += '&sharingToken=' + token;
+		}
+
+		var url = generateUrl(pathWithParams);
 		const response = await axios.get(url);
 		return response.data;
 	}
@@ -51,30 +75,23 @@ class Api {
 		etag?: string,
 		contentType = 'text/xml',
 	) {
-		const base = this.getUploadBase();
-		const fullPath = OCA.Sharing?.PublicApp
-			? base
-			: base + OC.joinPaths('/', path, name);
+		const urlParams = new URLSearchParams(window.location.search);
+		const token = urlParams.get('sharingToken') || '';
 
-		const headers = {
-			'Content-Type': contentType,
-			'X-Method-Override': 'PUT',
-		};
+		// Извлекаем fileId из параметров URL браузера
+		const fileId = parseInt(urlParams.get('fileId') || '0', 10);
 
-		if (etag) {
-			headers['If-Match'] = `"${etag}"`;
-		}
-
-		if ($('#sharingToken').val()) {
-			headers['Authorization'] =
-				'Basic ' + btoa($('#sharingToken').val() + ':');
+		// Формируем URL к нашему собственному контроллеру сохранения
+		let saveUrl = '/apps/files_bpm_ru/page/saveFile?fileId=' + fileId;
+		if (token) {
+			saveUrl += '&sharingToken=' + token;
 		}
 
 		let response;
-
 		try {
-			response = await axios.put(fullPath, data, {
-				headers,
+			// Отправляем POST запрос с XML-данными схемы (data)
+			response = await axios.post(generateUrl(saveUrl), {
+				content: data, // Передаем XML-строку в параметре content
 			});
 		} catch (error) {
 			if (!error.response) {
@@ -84,17 +101,21 @@ class Api {
 			showError('Problem saving file, please check the console');
 			response = error.response;
 		}
+
 		return {
 			data: response.data,
 			statuscode: response.status,
 			header: {
-				etag: this.parseEtag(response.headers.etag),
+				etag: response.headers ? this.parseEtag(response.headers.etag) : '',
 			},
 		};
 	}
 
 	public getUploadBase() {
-		if (OCA.Sharing?.PublicApp) {
+		// Если передан токен (в скрытом поле или в параметрах URL) — значит мы в публичном режиме
+		const hasToken = $('#sharingToken').val() || getSharingToken();
+
+		if (OCA.Sharing?.PublicApp || hasToken) {
 			return this.generatePublicUrl('webdav');
 		}
 
@@ -120,10 +141,14 @@ class Api {
 	}
 
 	public async getFileInfo(fileId: string): Promise<NextcloudFile> {
-		var url = generateUrl(
-			'/apps/files_bpm_ru/page/getFileInfo?fileId=' + fileId,
-		);
-		//var url = generateUrl('/apps/files_bpm_ru/page/testDummy');
+		const token = getSharingToken();
+
+		let pathWithParams = '/apps/files_bpm_ru/page/getFileInfo?fileId=' + fileId;
+		if (token) {
+			pathWithParams += '&sharingToken=' + token;
+		}
+
+		var url = generateUrl(pathWithParams);
 		const response = await axios.get(url);
 		return response.data;
 	}

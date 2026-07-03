@@ -124,5 +124,9 @@
     "webpack-merge": "^5.8.0",
     "webpack-node-externals": "^3.0.0",
     "zeebe-bpmn-moddle": "^1.0.0"
+  },
+  "resolutions": {
+    "@bpmn-io/cm-theme": "0.1.0-alpha.2",
+    "@bpmn-io/feel-editor": "0.2.0"
   }
 }

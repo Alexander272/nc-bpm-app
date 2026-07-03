@@ -1,5 +1,5 @@
 var process = { platform: '', env: '' };
-console.log("Help, I'm being repressed!");
+// console.log("Help, I'm being repressed!");
 
 import { translate as t } from '@nextcloud/l10n';
 import './imports/bootstrap';
@@ -133,6 +133,15 @@ if (parseInt(OC.config.version.substring(0, 2)) >= 28) {
 				return 'Открыть в ' + ext.toUpperCase() + ' редакторе';
 			},
 			enabled({ nodes }) {
+				// Проверяем, это публичная ссылка (гость) или обычный вход
+				const isPublic = window.location.pathname.indexOf('/s/') !== -1;
+
+				// Если гость, мы игнорируем проверку OC.PERMISSION_READ (так как у гостя нет объекта OC.PERMISSION)
+				if (isPublic) {
+					return nodes.length === 1 && attr.mime === nodes[0].mime;
+				}
+
+				// Оригинальное правило для авторизованных пользователей
 				return (
 					nodes.length === 1 &&
 					attr.mime === nodes[0].mime &&
@@ -148,14 +157,31 @@ if (parseInt(OC.config.version.substring(0, 2)) >= 28) {
 
 				const dirName = file.dirname;
 
-				window.location.href = OC.generateUrl(
-					'/apps/' +
-						'files_bpm_ru/?' +
-						'dir=' +
-						dirName +
-						'&fileId=' +
-						file.fileid,
-				);
+				// Проверяем контекст публичной ссылки
+				const isPublic = window.location.pathname.indexOf('/s/') !== -1;
+
+				if (isPublic) {
+					// Вытаскиваем токен публичной ссылки из текущего URL браузера
+					const token = window.location.pathname.split('/').pop() || '';
+
+					// Генерируем правильный роут в корень плагина (согласно 'url' => '/')
+					window.location.href = OC.generateUrl(
+						'/apps/files_bpm_ru/?fileId=' +
+							file.fileid +
+							'&sharingToken=' +
+							token,
+					);
+				} else {
+					// Оригинальный редирект для авторизованных пользователей
+					window.location.href = OC.generateUrl(
+						'/apps/' +
+							'files_bpm_ru/?' +
+							'dir=' +
+							dirName +
+							'&fileId=' +
+							file.fileid,
+					);
+				}
 				return true;
 			},
 			default: DefaultType.HIDDEN,
@@ -304,12 +330,42 @@ if (parseInt(OC.config.version.substring(0, 2)) >= 28) {
 				icon: OC.imagePath('files_bpm_ru', 'icon-filetypes_bpmn.svg'),
 				permissions: OC.PERMISSION_READ,
 				actionHandler(fileName: string, context) {
-					// const file = context.fileList.elementToFile(context.$file);
+					// --- ДОБАВЬТЕ ЭТИ ДВЕ СТРОКИ СЮДА ---
+					if (context && context.event) {
+						context.event.preventDefault(); // Останавливает дефолтное действие Nextcloud
+						context.event.stopPropagation(); // Не дает событию подняться к Sidebar
+					}
+					// ------------------------------------
 
-					const fileList = context.fileList || window.OCA.Files.App.fileList;
-					const file = fileList.elementToFile(context.$file);
+					// 1. Пытаемся получить fileList из контекста, либо из глобального объекта (с учетом публичной зоны)
+					let fileList = context.fileList;
+					if (!fileList) {
+						if (window.OCA && window.OCA.Files && window.OCA.Files.App) {
+							fileList = window.OCA.Files.App.fileList;
+						} else if (
+							window.OCA &&
+							window.OCA.Files &&
+							(window.OCA.Files as any).Public
+						) {
+							fileList = (window.OCA.Files as any).Public;
+						}
+					}
 
-					startBPMNEditor(file, context.fileList);
+					// 2. Безопасно парсим данные файла
+					let file: any = null;
+					if (fileList && typeof fileList.elementToFile === 'function') {
+						file = fileList.elementToFile(context.$file);
+					} else {
+						// Если стандартный метод недоступен, собираем минимальный объект файла из data-атрибутов HTML DOM
+						file = {
+							id: parseInt(context.$file.attr('data-id') || '0', 10),
+							name: fileName,
+							path: context.$file.attr('data-path') || '/',
+						};
+					}
+
+					// 3. Запускаем редактор
+					startBPMNEditor(file, fileList);
 				},
 			});
 
@@ -322,11 +378,41 @@ if (parseInt(OC.config.version.substring(0, 2)) >= 28) {
 				icon: OC.imagePath('files_bpm_ru', 'icon-filetypes_dmn.svg'),
 				permissions: OC.PERMISSION_READ,
 				actionHandler(fileName: string, context) {
-					// const file = context.fileList.elementToFile(context.$file);
-					const fileList = context.fileList || window.OCA.Files.App.fileList;
-					const file = fileList.elementToFile(context.$file);
+					// --- ДОБАВЬТЕ ЭТИ ДВЕ СТРОКИ СЮДА ---
+					if (context && context.event) {
+						context.event.preventDefault(); // Останавливает дефолтное действие Nextcloud
+						context.event.stopPropagation(); // Не дает событию подняться к Sidebar
+					}
+					// ------------------------------------
 
-					startDMNEditor(file, context.fileList);
+					// 1. Безопасно определяем fileList (поддерживает и обычный вход, и публичную ссылку)
+					let fileList = context.fileList;
+					if (!fileList) {
+						if (window.OCA && window.OCA.Files && window.OCA.Files.App) {
+							fileList = window.OCA.Files.App.fileList;
+						} else if (
+							window.OCA &&
+							window.OCA.Files &&
+							(window.OCA.Files as any).Public
+						) {
+							fileList = (window.OCA.Files as any).Public;
+						}
+					}
+
+					// 2. Извлекаем данные файла
+					let file: any = null;
+					if (fileList && typeof fileList.elementToFile === 'function') {
+						file = fileList.elementToFile(context.$file);
+					} else {
+						file = {
+							id: parseInt(context.$file.attr('data-id') || '0', 10),
+							name: fileName,
+							path: context.$file.attr('data-path') || '/',
+						};
+					}
+
+					// 3. Запускаем DMN-редактор
+					startDMNEditor(file, fileList);
 				},
 			});
 
@@ -339,11 +425,39 @@ if (parseInt(OC.config.version.substring(0, 2)) >= 28) {
 				icon: OC.imagePath('files_bpm_ru', 'icon-filetypes_cmmn.svg'),
 				permissions: OC.PERMISSION_READ,
 				actionHandler(fileName: string, context) {
-					// const file = context.fileList.elementToFile(context.$file);
-					const fileList = context.fileList || window.OCA.Files.App.fileList;
-					const file = fileList.elementToFile(context.$file);
+					// --- ДОБАВЬТЕ ЭТИ ДВЕ СТРОКИ СЮДА ---
+					if (context && context.event) {
+						context.event.preventDefault(); // Останавливает дефолтное действие Nextcloud
+						context.event.stopPropagation(); // Не дает событию подняться к Sidebar
+					}
+					// ------------------------------------
 
-					startDMNEditor(file, context.fileList);
+					// Безопасное определение fileList для гостей и пользователей
+					let fileList = context.fileList;
+					if (!fileList) {
+						if (window.OCA && window.OCA.Files && window.OCA.Files.App) {
+							fileList = window.OCA.Files.App.fileList;
+						} else if (
+							window.OCA &&
+							window.OCA.Files &&
+							(window.OCA.Files as any).Public
+						) {
+							fileList = (window.OCA.Files as any).Public;
+						}
+					}
+
+					let file: any = null;
+					if (fileList && typeof fileList.elementToFile === 'function') {
+						file = fileList.elementToFile(context.$file);
+					} else {
+						file = {
+							id: parseInt(context.$file.attr('data-id') || '0', 10),
+							name: fileName,
+							path: context.$file.attr('data-path') || '/',
+						};
+					}
+
+					startDMNEditor(file, fileList);
 				},
 			});
 
@@ -351,7 +465,25 @@ if (parseInt(OC.config.version.substring(0, 2)) >= 28) {
 		},
 	};
 
+	// 1. Стандартная регистрация плагина для обычных пользователей
 	OC.Plugins.register('OCA.Files.FileList', BpmFileListPlugin);
+
+	// 2. ИСПРАВЛЕННЫЙ БЕЗОПАСНЫЙ БЛОК ДЛЯ ГОСТЕЙ (Обходим TypeScript через строки)
+	const globalOCA = window.OCA as any;
+	if (
+		globalOCA &&
+		globalOCA.Files &&
+		globalOCA.Files['Public'] &&
+		globalOCA.Files['Public'].fileActions
+	) {
+		const publicFileList = {
+			id: 'public',
+			fileActions: globalOCA.Files['Public'].fileActions,
+		};
+		// Принудительно вызываем метод attach для гостевого контекста
+		BpmFileListPlugin.attach(publicFileList as any);
+	}
+
 	bootstrapFileShare();
 	fixFileIconForFileShare();
 }
