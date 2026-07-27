@@ -28,7 +28,6 @@ import './Editor.scss';
 import '@fortawesome/fontawesome-free/js/all.js';
 import '@fortawesome/fontawesome-free/js/solid.js';
 
-import './Editor.scss';
 import { jsPDF } from 'jspdf';
 import { is, isAny, getBusinessObject } from 'bpmn-js/lib/util/ModelUtil';
 
@@ -157,7 +156,7 @@ export default class BPMNEditor extends Editor {
 			const subsvg = svgContainer.find('svg').get(0);
 			if (subsvg) {
 				pdf.addPage('a4', 'landscape');
-				pdf.text(subprocesses[i].di.bpmnElement.name, 15, 30);
+				pdf.text(subprocesses[i].di.bpmnElement.name ?? '', 15, 30);
 
 				const width =
 					subsvg.width.baseVal.value < 620
@@ -363,7 +362,7 @@ export default class BPMNEditor extends Editor {
 	private addOverlays() {
 		const elements = this.modeler.get('elementRegistry');
 		const overlays = this.modeler.get('overlays');
-		elements.forEach(function (element) {
+		elements.forEach((element) => {
 			if (
 				isAny(element, [
 					'bpmn:CallActivity',

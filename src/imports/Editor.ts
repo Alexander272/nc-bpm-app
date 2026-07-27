@@ -5,7 +5,7 @@ import { jsPDF } from 'jspdf';
 import 'svg2pdf.js';
 import { DialogBuilder, showError } from '@nextcloud/dialogs';
 import '@nextcloud/dialogs/style.css';
-import { generateUrl, imagePath } from '@nextcloud/router';
+import { imagePath } from '@nextcloud/router';
 export type NextcloudFile = {
 	id?: number;
 	name: string;

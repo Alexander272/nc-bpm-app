@@ -14,8 +14,6 @@ import Modeler from 'cmmn-js/lib/Modeler';
 import Viewer from 'cmmn-js/lib/Viewer';
 import { jsPDF } from 'jspdf';
 
-let openPropertiesPanel = true;
-
 const PLAIN_TEMPLATE = `<?xml version="1.0" encoding="UTF-8"?>
 <cmmn:definitions xmlns:dc="http://www.omg.org/spec/CMMN/20151109/DC" xmlns:cmmndi="http://www.omg.org/spec/CMMN/20151109/CMMNDI" xmlns:cmmn="http://www.omg.org/spec/CMMN/20151109/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_0iu0xrq" targetNamespace="http://bpmn.io/schema/cmmn" exporter="cmmn-js (https://demo.bpmn.io/cmmn)" exporterVersion="0.20.0">
   <cmmn:case id="Case_17wsr0k">
@@ -203,8 +201,6 @@ export default class CMMNEditor extends Editor {
 		return containerElement;
 	}
 	private toggleProperties = (ev: JQuery.ClickEvent) => {
-		openPropertiesPanel = !openPropertiesPanel;
-
 		const propertiesElement =
 			this.getAppContainerElement().find('.bpmn-properties');
 		propertiesElement.toggleClass('hidden');

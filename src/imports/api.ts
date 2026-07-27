@@ -5,7 +5,6 @@ import { translate as t } from '@nextcloud/l10n';
 
 import { NextcloudFile } from './Editor';
 import { showError } from '@nextcloud/dialogs';
-import { emit } from '@nextcloud/event-bus';
 
 function getSharingToken(): string {
 	const urlParams = new URLSearchParams(window.location.search);

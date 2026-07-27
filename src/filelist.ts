@@ -21,7 +21,6 @@ import type { IFileAction } from '@nextcloud/files';
 import {
 	addNewFileMenuEntry,
 	DefaultType,
-	getNavigation,
 	registerFileAction,
 } from '@nextcloud/files';
 import './filelist.scss';
@@ -29,13 +28,6 @@ import './filelist.scss';
 const bpmnicon = require('../img/icon-filetypes_bpmn.svg');
 const dmnicon = require('../img/icon-filetypes_dmn.svg');
 const cmmnicon = require('../img/icon-filetypes_cmmn.svg');
-
-function bootstrapFileShare() {
-	//called once on page load
-	if (!OCA?.Sharing?.PublicApp) {
-		return;
-	}
-}
 
 function fixFileIconForFileShare() {
 	const dir = $('#dir').val();
@@ -476,6 +468,3 @@ if (parseInt(OC.config.version.substring(0, 2)) >= 28) {
 		BpmFileListPlugin.attach(publicFileList as any);
 	}
 }
-
-bootstrapFileShare();
-fixFileIconForFileShare();
