@@ -28,30 +28,29 @@ class PageController extends Controller {
 	private \OCP\Share\IManager $shareManager;
 	private IL10N $l10n;
 
+	private IConfig $config;
+
 	public function __construct(
 		string $AppName,
 		IRequest $request,
 		IRootFolder $storage,
-		$UserId,
+		?string $UserId,
 		LoggerInterface $logger,
 		IURLGenerator $urlGenerator,
 		\OCP\Share\IManager $shareManager,
 		IL10N $l10n,
+		IConfig $config,
 	) {
 		parent::__construct($AppName, $request);
-		$this->userId = (string)$UserId;
+		$this->userId = $UserId ?? '';
 		$this->storage = $storage;
 		$this->logger = $logger;
 		$this->urlGenerator = $urlGenerator;
 		$this->shareManager = $shareManager;
 		$this->l10n = $l10n;
+		$this->config = $config;
 	}
 
-	/**
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 * @PublicPage
-	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	#[PublicPage]
@@ -77,19 +76,11 @@ class PageController extends Controller {
 		return $this->indexLoggedIn();
 	}
 
-	/**
-	 * @NoAdminRequired
-	 */
 	#[NoAdminRequired]
 	public function indexLoggedIn() {
 		return new TemplateResponse($this->appName, 'modeler');
 	}
 
-	/**
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 * @PublicPage
-	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	#[PublicPage]
@@ -117,8 +108,8 @@ class PageController extends Controller {
 						'owner' => 'public_share',
 						'etag' => $file->getEtag(),
 						'mtime' => $file->getMTime(),
-						'created' => $file->getMTime(),
-						'instanceId' => \OC_Util::getInstanceId(),
+						'created' => $file->getCreationTime(),
+						'instanceId' => $this->config->getSystemValue('instanceid', ''),
 					],
 					Http::STATUS_OK
 				);
@@ -135,11 +126,11 @@ class PageController extends Controller {
 					'mime' => $file->getMimeType(),
 					'path' => $relativePath,
 					'name' => $file->getName(),
-					'owner' => $file->getOwner()->getUID(),
+					'owner' => $file->getOwner()?->getUID() ?? 'unknown',
 					'etag' => $file->getEtag(),
 					'mtime' => $file->getMTime(),
-					'created' => $file->getCreationTime() + $file->getUploadTime(),
-					'instanceId' => \OC_Util::getInstanceId(),
+					'created' => $file->getCreationTime(),
+					'instanceId' => $this->config->getSystemValue('instanceid', ''),
 				],
 				Http::STATUS_OK
 			);
@@ -149,11 +140,6 @@ class PageController extends Controller {
 		}
 	}
 
-	/**
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 * @PublicPage
-	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	#[PublicPage]
@@ -173,18 +159,13 @@ class PageController extends Controller {
 		}
 	}
 
-	/**
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 * @PublicPage
-	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	#[PublicPage]
 	public function saveFile() {
 		$fileId = (int)$this->request->getParam('fileId', '0');
 		$body = file_get_contents('php://input');
-		$data = json_decode($body, true);
+		$data = json_decode($body, true) ?: [];
 		$content = $data['content'] ?? '';
 		$path = $data['path'] ?? '/';
 		$name = $data['name'] ?? '';
@@ -221,10 +202,14 @@ class PageController extends Controller {
 
 		$userFolder = $this->storage->getUserFolder($this->userId);
 
-		try {
-			$folder = $userFolder->get($path);
-		} catch (\Exception $e) {
-			throw new \RuntimeException('Target folder does not exist');
+		if ($path === '/' || $path === '') {
+			$folder = $userFolder;
+		} else {
+			try {
+				$folder = $userFolder->get($path);
+			} catch (\Exception $e) {
+				throw new \RuntimeException('Target folder does not exist');
+			}
 		}
 
 		if (!($folder instanceof \OCP\Files\Folder)) {
