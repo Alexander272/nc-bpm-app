@@ -8,7 +8,6 @@ use OCP\AppFramework\Http\Template\PublicTemplateResponse;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
-use OCP\Util;
 use OCP\IURLGenerator;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Services\IInitialState;
@@ -110,7 +109,7 @@ class PageController extends Controller {
 		return new TemplateResponse($this->appName, 'modeler');  // templates/index.php
 	}
 
-  /**
+  	/**
      * This is not a comment, it's a setting!
      * @NoAdminRequired
      */
