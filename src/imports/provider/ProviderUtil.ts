@@ -13,14 +13,13 @@ export function TextComponent(props: any):TextFieldEntry {
 	const getValue = () => {
 		const ext = element.businessObject.extensionElements;
 		if (!ext) {
-			return [];
+			return '';
 		}
 		const prop = getProperty(element.businessObject, id);
 		if (!prop || prop.length < 1) {
-			return [];
+			return '';
 		}
 		return prop.value;
-		//return element.businessObject.nameDE || '';
 	};
 
 	const setValue = value => {
@@ -70,7 +69,7 @@ export function createGroup(element, translate) {
 	// create a group for properties
 	const group = {
 		id: 'nc',
-		label: translate('Nextcloud properties'),
+		label: translate('Nextcloud свойства'),
 		entries: ncProps(element),
 	};
 

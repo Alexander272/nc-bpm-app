@@ -1,6 +1,3 @@
-var process = { platform: '', env: '' };
-// console.log("Help, I'm being repressed!");
-
 import { translate as t } from '@nextcloud/l10n';
 import './imports/bootstrap';
 import api from './imports/api';
@@ -75,7 +72,7 @@ function registerFileIcon() {
 }
 
 //action when "New BPMN File" or "New DMN File"
-async function createDiagram(folder, ext) {
+async function createDiagram(folder: { path: string }, ext: string) {
 	//const content = await this.getContent();
 	const path = folder.path;
 	const filename =
@@ -92,8 +89,7 @@ async function createDiagram(folder, ext) {
 			return true;
 		}
 	} catch (e) {
-		console.error(e);
-		showError('Ошибка создания нового файла');
+		showError(t('files_bpm_ru', 'Ошибка создания нового файла'));
 		return false;
 	}
 }
@@ -107,21 +103,21 @@ if (parseInt(OC.config.version.substring(0, 2)) >= 28) {
 			type: 'text',
 			css: 'icon-filetype-bpmn',
 			icon: bpmnicon, //'../img/icon-filetypes_bpmn.svg',
-			newStr: 'Новый BPMN файл',
+			newStr: t('files_bpm_ru', 'Новый BPMN файл'),
 		},
 		dmn: {
 			mime: 'application/x-dmn',
 			type: 'text',
 			css: 'icon-filetype-dmn',
 			icon: dmnicon, //OC.imagePath('files_bpm_ru', 'icon-filetypes_bpmn.svg'),
-			newStr: 'Новый DMN файл',
+			newStr: t('files_bpm_ru', 'Новый DMN файл'),
 		},
 		cmmn: {
 			mime: 'application/x-cmmn',
 			type: 'text',
 			css: 'icon-filetype-cmmn',
 			icon: cmmnicon, //OC.imagePath('files_bpm_ru', 'icon-filetypes_bpmn.svg'),
-			newStr: 'Новый CMMN файл',
+			newStr: t('files_bpm_ru', 'Новый CMMN файл'),
 		},
 	};
 	registerFileIcon();
@@ -130,7 +126,7 @@ if (parseInt(OC.config.version.substring(0, 2)) >= 28) {
 		const action: IFileAction = {
 			id: ext,
 			displayName() {
-				return 'Открыть в ' + ext.toUpperCase() + ' редакторе';
+				return t('files_bpm_ru', 'Открыть в {ext} редакторе', { ext: ext.toUpperCase() });
 			},
 			enabled({ nodes }) {
 				// Проверяем, это публичная ссылка (гость) или обычный вход
@@ -198,18 +194,17 @@ if (parseInt(OC.config.version.substring(0, 2)) >= 28) {
 			async handler(folder) {
 				//Generate new BPMN/DMN diagram
 				if (!window.OC.getCurrentUser().uid) {
-					alert('Не реализовано. Not yet implemented.');
+					alert(t('files_bpm_ru', 'Не реализовано'));
 				} else {
-					try {
-						const returnValue = await createDiagram(folder, ext);
-						if (returnValue) {
-							location.reload();
-						}
-						return true;
-					} catch (e) {
-						console.log(e);
-						return false;
+				try {
+					const returnValue = await createDiagram(folder, ext);
+					if (returnValue) {
+						location.reload();
 					}
+					return true;
+				} catch (e) {
+					return false;
+				}
 				}
 			},
 		});
@@ -226,7 +221,6 @@ if (parseInt(OC.config.version.substring(0, 2)) >= 28) {
 		import(/* webpackChunkName: "bpmn-editor" */ './imports/BPMNEditor').then(
 			({ default: Editor }) => {
 				const editor = new Editor(file, fileList);
-				console.log('Запуск BPMN редактора');
 				editor.start();
 			},
 		);
@@ -236,16 +230,14 @@ if (parseInt(OC.config.version.substring(0, 2)) >= 28) {
 		import(/* webpackChunkName: "dmn-editor" */ './imports/DMNEditor').then(
 			({ default: Editor }) => {
 				const editor = new Editor(file, fileList);
-				console.log('Запуск DMN редактора');
 				editor.start();
 			},
 		);
 	}
 	function startCMMNEditor(file, fileList) {
-		import(/* webpackChunkName: "dmn-editor" */ './imports/CMMNEditor').then(
+		import(/* webpackChunkName: "cmmn-editor" */ './imports/CMMNEditor').then(
 			({ default: Editor }) => {
 				const editor = new Editor(file, fileList);
-				console.log('Запуск CMMN редактора');
 				editor.start();
 			},
 		);
@@ -457,11 +449,11 @@ if (parseInt(OC.config.version.substring(0, 2)) >= 28) {
 						};
 					}
 
-					startDMNEditor(file, fileList);
-				},
-			});
+				startCMMNEditor(file, fileList);
+			},
+		});
 
-			fileList.fileActions.setDefault('application/x-cmmn', 'cmmn');
+		fileList.fileActions.setDefault('application/x-cmmn', 'cmmn');
 		},
 	};
 
@@ -483,9 +475,6 @@ if (parseInt(OC.config.version.substring(0, 2)) >= 28) {
 		// Принудительно вызываем метод attach для гостевого контекста
 		BpmFileListPlugin.attach(publicFileList as any);
 	}
-
-	bootstrapFileShare();
-	fixFileIconForFileShare();
 }
 
 bootstrapFileShare();

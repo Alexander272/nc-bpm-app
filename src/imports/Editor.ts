@@ -190,7 +190,7 @@ export default abstract class Editor {
 				.append(
 					$('<li>')
 						.addClass('entry icon-image')
-						.attr('title', t('files_bpm_ru', 'Export SVG'))
+						.attr('title', t('files_bpm_ru', 'Экспорт SVG'))
 						.on(
 							'click',
 							this.clickCallbackFactory(this.onDownloadAsSVG, 'icon-download'),
@@ -200,7 +200,7 @@ export default abstract class Editor {
 				.append(
 					$('<li>')
 						.addClass('entry icon-pdf')
-						.attr('title', t('files_bpm_ru', 'Export PDF'))
+						.attr('title', t('files_bpm_ru', 'Экспорт PDF'))
 						.on(
 							'click',
 							this.clickCallbackFactory(this.onDownloadAsPDF, 'icon-download'),
@@ -291,8 +291,8 @@ export default abstract class Editor {
 
 	protected showLoadingError(errorMessage: string): void {
 		const text =
-			t('files_bpm_ru', 'Error while loading diagram: ') + errorMessage;
-		const title = t('files_bpm_ru', 'Could not load diagram');
+			t('files_bpm_ru', 'Ошибка загрузки диаграммы: ') + errorMessage;
+		const title = t('files_bpm_ru', 'Не удалось загрузить диаграмму');
 
 		showError(text);
 	}
@@ -306,7 +306,7 @@ export default abstract class Editor {
 			await this.fileList?.reload();
 		}
 
-		this.destroy();
+		await this.destroy();
 
 		if (this.containerElement && this.containerElement.length > 0) {
 			this.containerElement.remove();
@@ -326,16 +326,12 @@ export default abstract class Editor {
 
 	private async onSave() {
 		const content = await this.getContent();
-		console.log('The content is: ');
-		console.log(content);
 		const result = await api.uploadFile(
 			this.file.path,
 			this.file.name,
 			content,
 			this.file.etag,
 		);
-		console.log('Result: ');
-		console.log(result);
 
 		if (result.statuscode >= 200 && result.statuscode <= 299) {
 			if (result.statuscode === STATUS_CREATED) {
@@ -392,18 +388,14 @@ export default abstract class Editor {
 			format: 'a4',
 			unit: 'px',
 		}); //bounding.width > bounding.height ? 'l' : 'p', 'pt', [bounding.width, bounding.height]);
-		const title = this.file.name.replace(/\.[^.]+$/, '') ?? 'Diagram';
+		const title = this.file.name.replace(/\.[^.]+$/, '');
 
 		pdf.setFontSize(25).text(title, 15, 30);
 		await this.downloadAsPDF(pdf);
 
-		try {
-			await pdf.save(this.file.name.replace(/\.[^.]+$/, '.pdf'), {
-				returnPromise: true,
-			});
-		} catch (err) {
-			throw err;
-		}
+		await pdf.save(this.file.name.replace(/\.[^.]+$/, '.pdf'), {
+			returnPromise: true,
+		});
 	}
 
 	private async onFileHasChanged(serverEtag: string) {
@@ -430,7 +422,7 @@ export default abstract class Editor {
 
 			let newButtons = [
 				{
-					label: 'Overwrite',
+					label: t('files_bpm_ru', 'Перезаписать'),
 					type: 'primary' as const,
 					callback: () => {
 						this.file.etag = serverEtag;
@@ -438,7 +430,7 @@ export default abstract class Editor {
 					},
 				},
 				{
-					label: 'As new file',
+					label: t('files_bpm_ru', 'Как новый файл'),
 					callback: () => {
 						this.file.name = this.generateNewFileName();
 						this.file.etag = '';
@@ -450,10 +442,10 @@ export default abstract class Editor {
 				},
 			];
 			const builder = new DialogBuilder();
-			builder.setName('File has changed');
-			builder.setText(
-				'The file was modified while editing. Do you want to overwrite it, or should your changes be saved with a new filename?',
-			);
+		builder.setName(t('files_bpm_ru', 'Файл был изменён'));
+		builder.setText(
+			t('files_bpm_ru', 'Файл был изменён во время редактирования. Вы хотите перезаписать его или сохранить изменения с новым именем?'),
+		);
 			builder.setButtons(newButtons);
 			let dialog = builder.build();
 			dialog.show();
@@ -464,24 +456,24 @@ export default abstract class Editor {
 		return new Promise((resolve) => {
 			let newButtons = [
 				{
-					label: 'Close editor',
+					label: t('files_bpm_ru', 'Закрыть редактор'),
 					type: 'primary' as const,
 					callback: () => {
 						resolve(true);
 					},
 				},
 				{
-					label: 'Abort',
+					label: t('files_bpm_ru', 'Отмена'),
 					callback: () => {
 						resolve(false);
 					},
 				},
 			];
 			const builder = new DialogBuilder();
-			builder.setName('Discard changes?');
-			builder.setText(
-				'You have unsaved changes. Do you really want to close the editor?',
-			);
+		builder.setName(t('files_bpm_ru', 'Отменить изменения?'));
+		builder.setText(
+			t('files_bpm_ru', 'У вас есть несохранённые изменения. Вы действительно хотите закрыть редактор?'),
+		);
 			builder.setButtons(newButtons);
 			let dialog = builder.build();
 			dialog.show();
@@ -518,9 +510,8 @@ export default abstract class Editor {
 						className && targetElement.addClass(className);
 					}, 1000);
 				})
-				.catch((error) => {
-					console.log('clickCBFactory Error', error);
-					showError(error.toString());
+			.catch((error) => {
+				showError(error.toString());
 					// OC.dialogs.alert(
 					// 	error.toString(),
 					// 	t('files_bpm_ru', 'Error'),
@@ -543,10 +534,10 @@ export default abstract class Editor {
 
 	private onBeforeUnload = (ev: BeforeUnloadEvent) => {
 		if (this.hasUnsavedChanges) {
-			const message = t(
-				'files_bpm_ru',
-				'If you leave this page, all your modifications will be lost.',
-			);
+		const message = t(
+			'files_bpm_ru',
+			'Если вы покинете эту страницу, все ваши изменения будут потеряны.',
+		);
 
 			ev.preventDefault();
 			ev.returnValue = message;

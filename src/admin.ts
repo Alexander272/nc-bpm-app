@@ -52,9 +52,8 @@ $(() => {
 
 				resultElement.append(successElement);
 			})
-			.catch((err) => {
-				console.log('err', err);
-				let message = t('files_bpm_ru', 'Неожиданная ошибка');
+		.catch((err) => {
+			let message = t('files_bpm_ru', 'Неожиданная ошибка');
 
 				if (err === 'invalid-url') {
 					message = t('files_bpm_ru', 'URL не валиден');

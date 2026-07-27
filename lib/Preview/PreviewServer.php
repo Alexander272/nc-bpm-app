@@ -1,25 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OCA\FilesBpmRU\Preview;
 
 use OCA\FilesBpmRU\AppInfo\Application;
 use OCP\Files\File;
 use OCP\Files\FileInfo;
+use OCP\Http\Client\IClientService;
 use OCP\IConfig;
 use OCP\IImage;
 use OCP\Preview\IProviderV2;
 use Psr\Log\LoggerInterface;
 
 abstract class PreviewServer implements IProviderV2 {
-	/** @var IConfig */
-	protected $config;
+	protected IConfig $config;
+	protected LoggerInterface $logger;
+	protected IClientService $clientService;
 
-	/** @var LoggerInterface */
-	protected $logger;
-
-	public function __construct(IConfig $config, LoggerInterface $logger) {
+	public function __construct(IConfig $config, LoggerInterface $logger, IClientService $clientService) {
 		$this->config = $config;
 		$this->logger = $logger;
+		$this->clientService = $clientService;
 	}
 
 	abstract public function getMimeType(): string;
@@ -38,7 +40,7 @@ abstract class PreviewServer implements IProviderV2 {
 		try {
 			$preview = $this->requestPreview($url, $file->getContent());
 		} catch (\Exception $exception) {
-			$this->logger->warning('Could not get image from preview server', [ 'exception' => $exception ]);
+			$this->logger->warning('Could not get image from preview server', ['exception' => $exception]);
 			return null;
 		}
 
@@ -55,22 +57,21 @@ abstract class PreviewServer implements IProviderV2 {
 		return null;
 	}
 
-	protected function requestPreview($url, $content) {
-		$context = stream_context_create([
-			'http' => [
-				'method' => 'POST',
-				'header' => $this->getHeaderString([
-					'Content-Type' => $this->getMimeType(),
-					'Accept' => 'image/png',
-				]),
-				'content' => $content,
-				'timeout' => 30,
-			]
+	protected function requestPreview(string $url, string $content): string {
+		$client = $this->clientService->newClient();
+
+		$response = $client->post($url, [
+			'headers' => [
+				'Content-Type' => $this->getMimeType(),
+				'Accept' => 'image/png',
+			],
+			'body' => $content,
+			'timeout' => 30,
 		]);
 
-		$body = file_get_contents($url, false, $context);
+		$body = $response->getBody();
 
-		if ($body === null || $body === false) {
+		if ($body === null || $body === '') {
 			throw new \Exception('Got invalid response');
 		}
 
@@ -80,20 +81,6 @@ abstract class PreviewServer implements IProviderV2 {
 	protected function getPreviewServerUrl(): string {
 		$server = $this->config->getAppValue(Application::APP_ID, 'preview.server', '');
 
-		return $server !== '' ? $server . 'preview' : '';
-	}
-
-	protected function getHeaderString($headers) {
-		$flattened = [];
-
-		foreach ($headers as $key => $header) {
-			if (is_int($key)) {
-				$flattened[] = $header;
-			} else {
-				$flattened[] = $key.': '.$header;
-			}
-		}
-
-		return implode("\r\n", $flattened) . "\r\n";
+		return $server !== '' ? rtrim($server, '/') . '/preview' : '';
 	}
 }

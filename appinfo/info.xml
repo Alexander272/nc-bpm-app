@@ -28,11 +28,6 @@
     <dependencies>
         <nextcloud min-version="33" max-version="34"/>
     </dependencies>
-    <types>
-        <type>application/bpmn</type>
-        <type>application/cmmn</type>
-        <type>application/dmn</type>
-    </types>
     <repair-steps>
         <post-migration>
             <step>OCA\FilesBpmRU\Migration\AddMimetypeStep</step>

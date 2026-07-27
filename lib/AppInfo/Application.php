@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace OCA\FilesBpmRU\AppInfo;
 
 use OCA\Files\Event\LoadAdditionalScriptsEvent;
 use OCA\Files_Sharing\Event\BeforeTemplateRenderedEvent;
 use OCA\FilesBpmRU\Listener\LoadAdditionalScriptsListener;
 use OCA\FilesBpmRU\Preview\BPMN;
+use OCA\FilesBpmRU\Preview\CMMN;
 use OCA\FilesBpmRU\Preview\DMN;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -29,13 +32,17 @@ class Application extends App implements IBootstrap {
 	}
 
 	public function boot(IBootContext $context): void {
-		$context->injectFn(function (IPreview $previewManager, BPMN $bpmn, DMN $dmn) {
+		$context->injectFn(function (IPreview $previewManager, BPMN $bpmn, DMN $dmn, CMMN $cmmn) {
 			$previewManager->registerProvider('/application\/x-bpmn/', function () use ($bpmn) {
 				return $bpmn;
 			});
 
 			$previewManager->registerProvider('/application\/x-dmn/', function () use ($dmn) {
 				return $dmn;
+			});
+
+			$previewManager->registerProvider('/application\/x-cmmn/', function () use ($cmmn) {
+				return $cmmn;
 			});
 		});
 	}

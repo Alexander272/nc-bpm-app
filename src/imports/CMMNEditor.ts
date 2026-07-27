@@ -1,8 +1,5 @@
 import api from './api';
 import Editor from './Editor';
-
-//import drdAdapterModule from 'dmn-js-properties-panel/lib/adapter/drd';
-import camundaModdleDescriptor from 'camunda-dmn-moddle/resources/camunda.json';
 import { translate as t } from '@nextcloud/l10n';
 
 import 'cmmn-js/dist/assets/diagram-js.css';
@@ -16,7 +13,6 @@ import propertiesProviderModule from 'cmmn-js-properties-panel/lib/provider/camu
 import Modeler from 'cmmn-js/lib/Modeler';
 import Viewer from 'cmmn-js/lib/Viewer';
 import { jsPDF } from 'jspdf';
-import { is, isAny, getBusinessObject } from 'bpmn-js/lib/util/ModelUtil';
 
 let openPropertiesPanel = true;
 
@@ -44,21 +40,18 @@ const PLAIN_TEMPLATE = `<?xml version="1.0" encoding="UTF-8"?>
 </cmmn:definitions>`;
 
 export default class CMMNEditor extends Editor {
-
 	private modeler: Modeler | Viewer;
 
 	protected getContent(): Promise<string> {
-
 		if (this.modeler) {
-			var xmlresult;
+			let xmlresult: string | undefined;
 			this.modeler.saveXML({ format: true }, function (err, xml) {
 				if (err) {
-					return console.error('could not save CMMN 2.0 diagram', err);
+					return;
 				}
 				xmlresult = xml;
 			});
-			return Promise.resolve(xmlresult);
-			//({format: true}).then(data => data.xml);
+			return Promise.resolve(xmlresult ?? '');
 		}
 
 		if (this.file.etag || OCA.Sharing?.PublicApp) {
@@ -69,17 +62,15 @@ export default class CMMNEditor extends Editor {
 	}
 
 	protected async getSVG(): Promise<string> {
-
 		if (this.modeler) {
-			var svgresult;
+			let svgresult: string | undefined;
 			this.modeler.saveSVG(function (err, svg) {
 				if (err) {
-					return console.error('could not save CMMN 2.0 diagram', err);
+					return;
 				}
 				svgresult = svg;
-			})
-			return Promise.resolve(svgresult);
-			//return (await this.modeler.saveSVG()).svg;
+			});
+			return Promise.resolve(svgresult ?? '');
 		}
 
 		throw new Error('Modeler not loaded');
@@ -92,14 +83,13 @@ export default class CMMNEditor extends Editor {
 	}
 
 	protected async downloadAsPDF(pdf: jsPDF): Promise<void> {
-
-		var svgresult;
+		let svgresult: string | undefined;
 		this.modeler.saveSVG(function (err, svg) {
 			if (err) {
-				return console.error('could not save CMMN 2.0 diagram', err);
+				return;
 			}
 			svgresult = svg;
-		})
+		});
 
 		//for printing
 		const svgContainer = $('<div>');
@@ -107,15 +97,21 @@ export default class CMMNEditor extends Editor {
 			position: 'fixed',
 			bottom: '100%',
 		});
-		svgContainer.append(svgresult);
+		svgContainer.append(svgresult ?? '');
 		svgContainer.appendTo(this.containerElement);
 
 		const svgElement = svgContainer.find('svg').get(0);
 		//const bounding = svgElement.getBoundingClientRect();
 
 		if (svgElement) {
-			const width = svgElement.width.baseVal.value < 620 ? svgElement.width.baseVal.value - 30 : 600;
-			const height = svgElement.height.baseVal.value < 375 ? svgElement.height.baseVal.value - 30 : 375;
+			const width =
+				svgElement.width.baseVal.value < 620
+					? svgElement.width.baseVal.value - 30
+					: 600;
+			const height =
+				svgElement.height.baseVal.value < 375
+					? svgElement.height.baseVal.value - 30
+					: 375;
 			await pdf.svg(svgElement, {
 				x: 15,
 				y: 45,
@@ -135,8 +131,6 @@ export default class CMMNEditor extends Editor {
 		const modeler = this.getModeler();
 		try {
 			await modeler.importXML(xmldata);
-
-
 		} catch (err) {
 			this.showLoadingError(err.toString());
 		}
@@ -144,7 +138,7 @@ export default class CMMNEditor extends Editor {
 
 	private onResize = () => {
 		this.modeler && this.modeler.resized();
-	}
+	};
 
 	private getModeler() {
 		if (!this.modeler) {
@@ -152,21 +146,23 @@ export default class CMMNEditor extends Editor {
 			const canvasElement = containerElement.find('.bpmn-canvas');
 			const propertiesElement = containerElement.find('.bpmn-properties');
 
-			this.modeler = this.isFileUpdatable() ? new Modeler({
-				container: canvasElement,
-				propertiesPanel: {
-					parent: propertiesElement,
-				},
-				additionalModules: [
-					propertiesPanelModule,
-					propertiesProviderModule
-				],
-				keyboard: {
-					bindTo: window
-				}
-			}) : new Viewer({
-				container: canvasElement,
-			});
+			this.modeler = this.isFileUpdatable()
+				? new Modeler({
+						container: canvasElement,
+						propertiesPanel: {
+							parent: propertiesElement,
+						},
+						additionalModules: [
+							propertiesPanelModule,
+							propertiesProviderModule,
+						],
+						keyboard: {
+							bindTo: window,
+						},
+					})
+				: new Viewer({
+						container: canvasElement,
+					});
 			// if (openPropertiesPanel) {
 
 			// 	$('<div>')
@@ -193,24 +189,24 @@ export default class CMMNEditor extends Editor {
 		const containerElement = super.getAppContainerElement();
 
 		if (newcontainer) {
-			const actionsgroup = document.getElementById('modeler-actions-group') ?? $('#modeler-actions-group');
-			console.log(actionsgroup);
+			const actionsgroup =
+				document.getElementById('modeler-actions-group') ??
+				$('#modeler-actions-group');
 			$('<div>', { id: 'propertiesToggle' })
 				.attr('role', 'button')
 				.addClass('entry')
 				.on('click', this.toggleProperties)
-				.append('<span>Properties</span>')
+				.append(`<span>${t('files_bpm_ru', 'Свойства')}</span>`)
 				.appendTo(actionsgroup);
-			console.log('appending')
 		}
 
 		return containerElement;
 	}
 	private toggleProperties = (ev: JQuery.ClickEvent) => {
-
 		openPropertiesPanel = !openPropertiesPanel;
 
-		const propertiesElement = this.getAppContainerElement().find('.bpmn-properties');
+		const propertiesElement =
+			this.getAppContainerElement().find('.bpmn-properties');
 		propertiesElement.toggleClass('hidden');
-	}
+	};
 }

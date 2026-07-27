@@ -1,20 +1,19 @@
 import { generateRemoteUrl, getRootUrl } from '@nextcloud/router';
 import axios from '@nextcloud/axios';
 import { generateUrl } from '@nextcloud/router';
+import { translate as t } from '@nextcloud/l10n';
 
 import { NextcloudFile } from './Editor';
 import { showError } from '@nextcloud/dialogs';
 import { emit } from '@nextcloud/event-bus';
 
 function getSharingToken(): string {
-	// 1. Проверяем, есть ли токен в параметрах URL (когда мы уже внутри редактора)
 	const urlParams = new URLSearchParams(window.location.search);
 	const tokenFromParam = urlParams.get('sharingToken');
 	if (tokenFromParam) {
 		return tokenFromParam;
 	}
 
-	// 2. Если нет в параметрах, ищем в пути публичной папки (когда мы еще в списке файлов)
 	const isPublic = window.location.pathname.indexOf('/s/') !== -1;
 	if (isPublic) {
 		return window.location.pathname.split('/').pop() || '';
@@ -33,16 +32,9 @@ class Api {
 		return response.data.result;
 	}
 
-	// public async getFileContent(path: string, name: string): Promise<string> {
-	// 	const fullPath = this.getDownloadPath(path, name);
-	// 	const response = await axios.get(fullPath);
-
-	// 	return response.data;
-	// }
-
-	public async getFileContent(path: string, fileId: number): Promise<string> {
+	public async getFileContent(_path: string, fileId: number): Promise<string> {
 		if (fileId == 0) {
-			showError('File ID is missing!');
+			throw new Error(t('files_bpm_ru', 'ID файла не указан'));
 		}
 
 		const token = getSharingToken();
@@ -53,7 +45,7 @@ class Api {
 			pathWithParams += '&sharingToken=' + token;
 		}
 
-		var url = generateUrl(pathWithParams);
+		const url = generateUrl(pathWithParams);
 		const response = await axios.get(url);
 		return response.data;
 	}
@@ -77,11 +69,8 @@ class Api {
 	) {
 		const urlParams = new URLSearchParams(window.location.search);
 		const token = urlParams.get('sharingToken') || '';
-
-		// Извлекаем fileId из параметров URL браузера
 		const fileId = parseInt(urlParams.get('fileId') || '0', 10);
 
-		// Формируем URL к нашему собственному контроллеру сохранения
 		let saveUrl = '/apps/files_bpm_ru/page/saveFile?fileId=' + fileId;
 		if (token) {
 			saveUrl += '&sharingToken=' + token;
@@ -89,16 +78,16 @@ class Api {
 
 		let response;
 		try {
-			// Отправляем POST запрос с XML-данными схемы (data)
 			response = await axios.post(generateUrl(saveUrl), {
-				content: data, // Передаем XML-строку в параметре content
+				content: data,
+				path: path,
+				name: name,
 			});
 		} catch (error) {
 			if (!error.response) {
-				console.log(error);
 				throw error;
 			}
-			showError('Problem saving file, please check the console');
+			showError(t('files_bpm_ru', 'Ошибка сохранения файла'));
 			response = error.response;
 		}
 
@@ -112,7 +101,6 @@ class Api {
 	}
 
 	public getUploadBase() {
-		// Если передан токен (в скрытом поле или в параметрах URL) — значит мы в публичном режиме
 		const hasToken = $('#sharingToken').val() || getSharingToken();
 
 		if (OCA.Sharing?.PublicApp || hasToken) {
@@ -148,7 +136,7 @@ class Api {
 			pathWithParams += '&sharingToken=' + token;
 		}
 
-		var url = generateUrl(pathWithParams);
+		const url = generateUrl(pathWithParams);
 		const response = await axios.get(url);
 		return response.data;
 	}

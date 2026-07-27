@@ -18,7 +18,7 @@
         "phpunit/phpunit": "^8.5 || ^9.5",
         "friendsofphp/php-cs-fixer": "^3.2",
         "nextcloud/coding-standard": "^1.0.0",
-        "nextcloud/ocp": "dev-stable24",
+        "nextcloud/ocp": "dev-stable33",
         "vimeo/psalm": "^4.5"
     },
     "scripts": {

@@ -55,9 +55,8 @@ export default class DMNEditor extends Editor {
 		if (this.modeler) {
 			const active = await this.modeler.getActiveViewer();
 			const temp = await this.modeler.getActiveView();
-			console.log(active);
-			if (active.type == 'drd') {
-				console.log('currently in DRD; creating SVG');
+			if (temp.type == 'drd') {
+				// currently in DRD; creating SVG
 			}
 			else {
 				const drd = this.modeler.getViews().filter(a => a.type == 'drd')[0];
@@ -187,8 +186,6 @@ export default class DMNEditor extends Editor {
 	protected async closeProp(): Promise<void> {
 		const containerElement = this.getAppContainerElement();
 		const propertiesElement = containerElement.find('.bpmn-properties');
-		console.log(containerElement);
-		console.log(propertiesElement);
 		propertiesElement.addClass('hidden');
 
 	}

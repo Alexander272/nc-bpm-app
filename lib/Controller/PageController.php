@@ -1,124 +1,252 @@
 <?php
+
+declare(strict_types=1);
+
 namespace OCA\FilesBpmRU\Controller;
 
-use OCP\AppFramework\Http\Attribute\PublicPage;
-use OCP\IRequest;
+use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\Template\PublicTemplateResponse;
-use OCP\AppFramework\Http\DataResponse;
-use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
-use OCP\IURLGenerator;
-use OCP\AppFramework\Http\RedirectResponse;
-use OCP\AppFramework\Services\IInitialState;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\IConfig;
+use OCP\IL10N;
+use OCP\IRequest;
+use OCP\IURLGenerator;
 use OCP\Files\IRootFolder;
-
-use OCP\AppFramework\Http;
-
-//use OCP\ILogger;
 use Psr\Log\LoggerInterface;
 
-//Thanks to : https://github.com/githubkoma/multiboards/blob/main/js/filesintegration/src/index.js
-
-
 class PageController extends Controller {
-	private $userId;
+	private string $userId;
 	private IRootFolder $storage;
-	private $logger;
-	private $urlGenerator;
-	/** @var \OCP\Share\IManager */
-	private $shareManager;
+	private LoggerInterface $logger;
+	private IURLGenerator $urlGenerator;
+	private \OCP\Share\IManager $shareManager;
+	private IL10N $l10n;
 
-
-	public function __construct($AppName,
-					IRequest $request,
-					IRootFolder
-					$storage,
-					$UserId,
-					LoggerInterface $logger,
-					IURLGenerator $urlGenerator,
-					\OCP\Share\IManager $shareManager,
-	){
+	public function __construct(
+		string $AppName,
+		IRequest $request,
+		IRootFolder $storage,
+		$UserId,
+		LoggerInterface $logger,
+		IURLGenerator $urlGenerator,
+		\OCP\Share\IManager $shareManager,
+		IL10N $l10n,
+	) {
 		parent::__construct($AppName, $request);
-		$this->userId = $UserId;
+		$this->userId = (string)$UserId;
 		$this->storage = $storage;
+		$this->logger = $logger;
 		$this->urlGenerator = $urlGenerator;
 		$this->shareManager = $shareManager;
+		$this->l10n = $l10n;
 	}
 
-
 	/**
-	 * CAUTION: the @Stuff turns off security checks; for this page no admin is
-	 *          required and no CSRF check. If you don't know what CSRF is, read
-	 *          it up in the docs or you might create a security hole. This is
-	 *          basically the only required method to add this exemption, don't
-	 *          add it to any other method if you don't exactly know what it does
-	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
 	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	#[PublicPage]
 	public function index() {
-		// Извлекаем токен из запроса, который мы настроили во фронтенде
 		$token = $this->request->getParam('sharingToken', '');
 
-		if ($this->userId == "") {
-			// Если пользователя нет, но передан токен публичной ссылки — пускаем гостя!
+		if ($this->userId === '') {
 			if (!empty($token)) {
-				// Используем заготовленный автором PublicTemplateResponse для анонимов
 				$template = new PublicTemplateResponse($this->appName, 'modeler', []);
-				$template->setHeaderTitle('BPMN Files');
-				$template->setHeaderDetails("Public View");
+				$template->setHeaderTitle($this->l10n->t('BPMN Файлы'));
+				$template->setHeaderDetails($this->l10n->t('Публичный просмотр'));
 				$template->setFooterVisible(false);
 
-				return $template; // <-- Отдаем интерфейс гостю, редирект на логин НЕ происходит!
+				return $template;
 			}
 
-			// Если токена тоже нет (пользователь просто "с улицы" зашел на роут) — тогда отправляем на логин
-			$redirectUrl = $this->urlGenerator->linkToRoute("core.login.showLoginForm", [
-				"redirect_url" => $this->request->getRequestUri()
+			$redirectUrl = $this->urlGenerator->linkToRoute('core.login.showLoginForm', [
+				'redirect_url' => $this->request->getRequestUri(),
 			]);
 			return new RedirectResponse($redirectUrl);
-
-		} else {
-			// Обычный вход для авторизованного пользователя
-			$response = $this->indexLoggedIn();
 		}
 
-		return $response;
+		return $this->indexLoggedIn();
 	}
 
 	/**
-	 * CAUTION: the @Stuff turns off security checks; for this page no admin is
-	 *          required and no CSRF check. If you don't know what CSRF is, read
-	 *          it up in the docs or you might create a security hole. This is
-	 *          basically the only required method to add this exemption, don't
-	 *          add it to any other method if you don't exactly know what it does
-	 *
+	 * @NoAdminRequired
+	 */
+	#[NoAdminRequired]
+	public function indexLoggedIn() {
+		return new TemplateResponse($this->appName, 'modeler');
+	}
+
+	/**
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
+	 * @PublicPage
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	#[PublicPage]
+	public function getFileInfo($fileId) {
+		try {
+			$file = $this->getFile((int)$fileId);
 
-	public function indexLoggedIn() {
-		return new TemplateResponse($this->appName, 'modeler');  // templates/index.php
+			if ($file instanceof \OCP\Files\Folder) {
+				return new DataResponse(['message' => 'You can not open a folder'], Http::STATUS_BAD_REQUEST);
+			}
+
+			if ($this->userId === '') {
+				$share = $this->getShareForGuest();
+				$permissions = $share->getPermissions();
+				$isWriteable = ($permissions & \OCP\Constants::PERMISSION_UPDATE) !== 0;
+
+				return new DataResponse(
+					[
+						'id' => $file->getId(),
+						'size' => $file->getSize(),
+						'writeable' => $isWriteable,
+						'mime' => $file->getMimeType(),
+						'path' => '/',
+						'name' => $file->getName(),
+						'owner' => 'public_share',
+						'etag' => $file->getEtag(),
+						'mtime' => $file->getMTime(),
+						'created' => $file->getMTime(),
+						'instanceId' => \OC_Util::getInstanceId(),
+					],
+					Http::STATUS_OK
+				);
+			}
+
+			$baseFolder = $this->storage->getUserFolder($this->userId);
+			$relativePath = dirname($baseFolder->getRelativePath($file->getPath()));
+
+			return new DataResponse(
+				[
+					'id' => $file->getId(),
+					'size' => $file->getSize(),
+					'writeable' => $file->isUpdateable(),
+					'mime' => $file->getMimeType(),
+					'path' => $relativePath,
+					'name' => $file->getName(),
+					'owner' => $file->getOwner()->getUID(),
+					'etag' => $file->getEtag(),
+					'mtime' => $file->getMTime(),
+					'created' => $file->getCreationTime() + $file->getUploadTime(),
+					'instanceId' => \OC_Util::getInstanceId(),
+				],
+				Http::STATUS_OK
+			);
+		} catch (\Exception $e) {
+			$this->logger->error('Error getting file info: ' . $e->getMessage());
+			return new DataResponse(['message' => 'An internal server error occurred.'], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
 	}
 
-  	/**
-     * This is not a comment, it's a setting!
-     * @NoAdminRequired
-     */
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 */
 	#[NoAdminRequired]
-	private function getFile($fileId, $requireWrite = false) {
+	#[NoCSRFRequired]
+	#[PublicPage]
+	public function getFileContent($fileId) {
+		try {
+			$file = $this->getFile((int)$fileId);
+
+			if ($file instanceof \OCP\Files\Folder) {
+				return new DataResponse(['message' => 'You can not open a folder'], Http::STATUS_BAD_REQUEST);
+			}
+
+			$content = $file->getContent();
+			return new DataResponse($content, Http::STATUS_OK);
+		} catch (\Exception $e) {
+			$this->logger->error('Error getting file content: ' . $e->getMessage());
+			return new DataResponse(['message' => 'An internal server error occurred.'], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	#[PublicPage]
+	public function saveFile() {
+		$fileId = (int)$this->request->getParam('fileId', '0');
+		$body = file_get_contents('php://input');
+		$data = json_decode($body, true);
+		$content = $data['content'] ?? '';
+		$path = $data['path'] ?? '/';
+		$name = $data['name'] ?? '';
+
+		try {
+			if ($fileId > 0) {
+				$file = $this->getFile($fileId, true);
+				$file->putContent($content);
+			} else {
+				$file = $this->createFile($path, $name, $content);
+			}
+
+			return new DataResponse([
+				'status' => 'success',
+				'id' => $file->getId(),
+			], Http::STATUS_OK);
+		} catch (\Exception $e) {
+			$this->logger->warning('Error saving file: ' . $e->getMessage());
+			return new DataResponse(['message' => $e->getMessage()], Http::STATUS_FORBIDDEN);
+		}
+	}
+
+	/**
+	 * @throws \RuntimeException
+	 */
+	private function createFile(string $path, string $name, string $content): \OCP\Files\File {
+		if ($this->userId === '') {
+			throw new \RuntimeException('Authentication required to create files');
+		}
+
+		if (empty($name)) {
+			throw new \RuntimeException('File name is required');
+		}
+
+		$userFolder = $this->storage->getUserFolder($this->userId);
+
+		try {
+			$folder = $userFolder->get($path);
+		} catch (\Exception $e) {
+			throw new \RuntimeException('Target folder does not exist');
+		}
+
+		if (!($folder instanceof \OCP\Files\Folder)) {
+			throw new \RuntimeException('Target path is not a folder');
+		}
+
+		if (!$folder->isCreatable()) {
+			throw new \RuntimeException('You do not have permission to create files here');
+		}
+
+		$file = $folder->newFile($name, $content);
+
+		return $file;
+	}
+
+	/**
+	 * @throws \RuntimeException
+	 */
+	private function getFile(int $fileId, bool $requireWrite = false): \OCP\Files\File {
 		$file = null;
 
-		// 1. Проверка для авторизованных пользователей
-		if ($this->userId !== null && $this->userId !== '') {
+		if ($this->userId !== '') {
 			try {
 				$userFolder = $this->storage->getUserFolder($this->userId);
 				$files = $userFolder->getById($fileId);
@@ -126,179 +254,70 @@ class PageController extends Controller {
 					$file = $files[0];
 				}
 			} catch (\OCP\Files\NotFoundException $e) {
-				throw new StorageException('File does not exist');
+				throw new \RuntimeException('File does not exist');
 			}
 		} else {
-			// 2. Проверка для анонимных гостей по публичной ссылке
 			$token = $this->request->getParam('sharingToken', '');
 
 			if (!empty($token)) {
 				try {
 					$share = $this->shareManager->getShareByToken($token);
-					
-					// --- СТРОГАЯ ПРОВЕРКА ПРАВ НА ЗАПИСЬ ---
+
 					if ($requireWrite) {
 						$permissions = $share->getPermissions();
 						if (($permissions & \OCP\Constants::PERMISSION_UPDATE) === 0) {
-							// Используем базовый класс Exception, чтобы не взрывать ядро Nextcloud
-							throw new \Exception('Read-only share. You are not allowed to edit this file.');
+							throw new \RuntimeException('Read-only share. You are not allowed to edit this file.');
 						}
 					}
-					// ----------------------------------------
 
 					$sharedNode = $share->getNode();
 
-					// Если расшарена папка, ищем нужный файл внутри неё по его ID
 					if ($sharedNode instanceof \OCP\Files\Folder) {
 						$files = $sharedNode->getById($fileId);
 						if (!empty($files)) {
 							$file = $files[0];
 						}
-					} 
-					// Если расшарен напрямую сам файл, и его ID совпадает
-					elseif ($sharedNode instanceof \OCP\Files\File && (int)$sharedNode->getId() === (int)$fileId) {
+					} elseif ($sharedNode instanceof \OCP\Files\File && (int)$sharedNode->getId() === $fileId) {
 						$file = $sharedNode;
 					}
+				} catch (\RuntimeException $e) {
+					throw $e;
 				} catch (\Exception $e) {
-					throw new StorageException($e->getMessage());
+					throw new \RuntimeException('Access denied');
 				}
 			}
 		}
 
 		if (!$file) {
-			throw new StorageException('File does not exist or access denied');
+			throw new \RuntimeException('File does not exist or access denied');
 		}
 
-		// Дополнительная проверка оригинальных прав самого файла
 		if ($requireWrite && !$file->isUpdateable()) {
-			throw new \Exception('This file itself is not writeable.');
-		} elseif (!$file->isReadable()) {
-			throw new ForbiddenException();
+			throw new \RuntimeException('This file is not writeable.');
+		}
+
+		if (!$file->isReadable()) {
+			throw new \RuntimeException('This file is not readable.');
 		}
 
 		if ($file instanceof \OCP\Files\File) {
 			return $file;
-		} else {
-			throw new StorageException('Can not read from folder');
 		}
-	}
 
-
-	 /**
-     * This is not a comment, it's a setting!
-     * @NoAdminRequired
-     */
-	#[NoAdminRequired]
-	#[PublicPage]
-	public function getFileInfo($fileId) {
-		try
-        {
-            $file = $this->getFile($fileId);
-
-            if ($file instanceof Folder) {
-                return new DataResponse(['message' => 'You can not open a folder'], Http::STATUS_BAD_REQUEST);
-            }
-
-            // ПРОВЕРКА: Если зашел анонимный гость (userId пустой)
-            if (empty($this->userId)) {
-                return new DataResponse(
-                    [
-                        'id' => $file->getId(),
-                        'size' => $file->getSize(),
-                        'writeable' => true, // Разрешаем гостю интерактив (при условии прав на общую папку)
-                        'mime' => $file->getMimeType(),
-                        'path' => '/', // Для гостя корень — это сама общая папка
-                        'name' => $file->getName(),
-                        'owner' => 'public_share', // Заглушка владельца для гостя
-                        'etag' => $file->getEtag(),
-                        'mtime' => $file->getMTime(),
-                        'created' => $file->getMTime(), // Безопасная заглушка времени
-                        'instanceId' => \OC_Util::getInstanceId()
-                    ],
-                    Http::STATUS_OK
-                );
-            }
-
-            // ОРИГИНАЛЬНЫЙ КОД ДЛЯ АВТОРИЗОВАННЫХ ПОЛЬЗОВАТЕЛЕЙ
-            $baseFolder = $this->storage->getUserFolder($this->userId);
-            $relativePath = dirname($baseFolder->getRelativePath($file->getPath()));
-
-            return new DataResponse(
-                [
-                    'id' => $file->getId(),
-                    'size' => $file->getSize(),
-                    'writeable' => $file->isUpdateable(),
-                    'mime' => $file->getMimeType(),
-                    'path' => $relativePath,
-                    'name' => $file->getName(),
-                    'owner' => $file->getOwner()->getUID(),
-                    'etag' => $file->getEtag(),
-                    'mtime' => $file->getMTime(),
-                    'created' => $file->getCreationTime() + $file->getUploadTime(),
-                    'instanceId' => \OC_Util::getInstanceId()
-                ],
-                Http::STATUS_OK
-            );
-        }
-        catch (\Exception $e) {
-			$message ='An internal server error occurred.';
-			return new DataResponse(['message' => $message], Http::STATUS_INTERNAL_SERVER_ERROR);
-		}
-    }
-
-	/**
-     * This is not a comment, it's a setting!
-     * @NoAdminRequired
-     */
-	#[NoAdminRequired]
-	#[PublicPage]
-	public function getFileContent($fileId){
-		try
-        {
-            $file = $this->getFile($fileId);
-
-            if ($file instanceof Folder) {
-                return new DataResponse(['message' => 'You can not open a folder'], Http::STATUS_BAD_REQUEST);
-            }
-
-			// Просто отдаем XML-код схемы. Метод getContent() у объекта File 
-			// прекрасно работает для публичных нод, без вызова NoUserException.
-			$content = $file->getContent();
-			return new DataResponse($content, Http::STATUS_OK);
-        }
-        catch (\Exception $e) {
-			$message ='An internal server error occurred.';
-			return new DataResponse(['message' => $message], Http::STATUS_INTERNAL_SERVER_ERROR);
-		}
-	}
-
-  /**
-     * This is not a comment, it's a setting!
-     * @NoAdminRequired
-     */
-	#[NoAdminRequired]
-	#[PublicPage]
-	public function testDummy($fileId){
-		$message = 'This is only a test. File ID: ';
-		return new DataResponse(['message'=> $message], 418);
+		throw new \RuntimeException('Can not read from folder');
 	}
 
 	/**
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
+	 * @return \OCP\Share\IShare
+	 * @throws \RuntimeException
 	 */
-	#[NoAdminRequired]
-	#[NoCSRFRequired]
-	#[PublicPage]
-	public function saveFile($fileId, $content) {
-		try {
-			$file = $this->getFile($fileId, true);
-			$file->putContent($content);
+	private function getShareForGuest(): \OCP\Share\IShare {
+		$token = $this->request->getParam('sharingToken', '');
 
-			return new DataResponse(['status' => 'success'], Http::STATUS_OK);
-		} catch (\Exception $e) {
-			// Возвращаем текст ошибки и статус 403 Forbidden без падения сервера в 500
-			return new DataResponse(['message' => $e->getMessage()], 403);
+		if (empty($token)) {
+			throw new \RuntimeException('No share token provided');
 		}
+
+		return $this->shareManager->getShareByToken($token);
 	}
 }

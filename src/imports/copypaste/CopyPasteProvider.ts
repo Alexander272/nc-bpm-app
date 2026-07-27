@@ -62,8 +62,6 @@ export default function CopyPasteModule(keyboard, eventBus, moddle, clipboard) {
 	eventBus.on('copyPaste.elementsCopied', event => {
 		const { tree } = event;
 
-		console.log('PUT localStorage', tree);
-
 		// persist in local storage, encoded as json
 		localStorage.setItem('bpmnClipboard', JSON.stringify(tree));
 	});
@@ -85,9 +83,12 @@ export default function CopyPasteModule(keyboard, eventBus, moddle, clipboard) {
 		}
 
 		// parse tree, reinstantiating contained objects
-		const parsedCopy = JSON.parse(serializedCopy, createReviver(moddle));
-
-		console.log('GET localStorage', parsedCopy);
+		let parsedCopy;
+		try {
+			parsedCopy = JSON.parse(serializedCopy, createReviver(moddle));
+		} catch {
+			return;
+		}
 
 		// put into clipboard
 		clipboard.set(parsedCopy);

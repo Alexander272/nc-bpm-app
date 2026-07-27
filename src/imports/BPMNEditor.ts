@@ -23,8 +23,6 @@ import 'bpmn-js/dist/assets/bpmn-js.css';
 // import 'bpmn-js-properties-panel/dist/assets/element-templates.css';
 // import 'bpmn-js-bpmnlint/dist/assets/css/bpmn-js-bpmnlint.css';
 
-let openPropertiesPanel = false;
-
 import './Editor.scss';
 
 import '@fortawesome/fontawesome-free/js/all.js';
@@ -289,27 +287,19 @@ export default class BPMNEditor extends Editor {
 
 					containerElement.attr('data-state', 'unsaved');
 				}
-				this.updateOverlay(e);
-			});
-			if (openPropertiesPanel) {
-				$('<div>')
-					.addClass('entry close icon-close propertiespanel-close')
-					.attr('role', 'button')
-					.on('click', this.clickCallbackFactory(this.closeProp))
-					.appendTo(propertiesElement);
-				console.log('appended a close button');
-			}
+			this.updateOverlay(e);
+		});
 		}
 		return this.modeler;
 	}
-	protected async closeProp(): Promise<void> {
-		const containerElement = this.getAppContainerElement();
-		const propertiesElement = containerElement.find('.bpmn-properties');
-		propertiesElement.addClass('hidden');
+
+	private escapeHtml(str: string): string {
+		const div = document.createElement('div');
+		div.appendChild(document.createTextNode(str));
+		return div.innerHTML;
 	}
 
 	private updateOverlay(ev) {
-		console.log('updating overlays');
 		const element = ev.element;
 		if (
 			isAny(element, [
@@ -319,7 +309,6 @@ export default class BPMNEditor extends Editor {
 			]) &&
 			!(element.type == 'label')
 		) {
-			console.log(element);
 			try {
 				const overlays = this.modeler.get('overlays');
 
@@ -342,7 +331,7 @@ export default class BPMNEditor extends Editor {
 					element.type == 'bpmn:CallActivity' ||
 					element.type == 'bpmn:callActivity'
 				) {
-					const htmlOverlay = `<a href="https://${modelUrl}" class="djs-overlay djs-overlay-drilldown link-overlay" target="_blank"><i class="fa-solid fa-link"></i></a>`;
+					const htmlOverlay = `<a href="https://${this.escapeHtml(modelUrl)}" class="djs-overlay djs-overlay-drilldown link-overlay" target="_blank"><i class="fa-solid fa-link"></i></a>`;
 					overlays.add(element.id, 'drilldown', {
 						position: {
 							bottom: 0,
@@ -351,7 +340,7 @@ export default class BPMNEditor extends Editor {
 						html: htmlOverlay,
 					});
 				} else {
-					const htmlOverlay = `<a href="https://${modelUrl}" class="djs-overlay djs-overlay-drilldown link-overlay" target="_blank"><i class="fa-regular fa-file-lines"></i></a>`;
+					const htmlOverlay = `<a href="https://${this.escapeHtml(modelUrl)}" class="djs-overlay djs-overlay-drilldown link-overlay" target="_blank"><i class="fa-regular fa-file-lines"></i></a>`;
 
 					let left = element.width;
 					let top = element.height + 5;
@@ -366,9 +355,7 @@ export default class BPMNEditor extends Editor {
 					});
 				}
 			} catch (e) {
-				//These overlays are just helpful, so it's better to skip any that break without warning the user
-				console.error('non-breaking error: ');
-				console.log(e);
+				// These overlays are just helpful, so it's better to skip any that break without warning the user
 			}
 		}
 	}
@@ -385,9 +372,8 @@ export default class BPMNEditor extends Editor {
 				]) &&
 				!(element.type == 'label')
 			) {
-				try {
-					console.log(element);
-					const extValues = element.businessObject?.extensionElements;
+			try {
+				const extValues = element.businessObject?.extensionElements;
 					if (!extValues) {
 						return;
 					}
@@ -407,7 +393,7 @@ export default class BPMNEditor extends Editor {
 						element.type == 'bpmn:CallActivity' ||
 						element.type == 'bpmn:callActivity'
 					) {
-						const htmlOverlay = `<a href="https://${modelUrl}" class="djs-overlay djs-overlay-drilldown link-overlay" target="_blank"><i class="fa-solid fa-link"></i></a>`;
+						const htmlOverlay = `<a href="https://${this.escapeHtml(modelUrl)}" class="djs-overlay djs-overlay-drilldown link-overlay" target="_blank"><i class="fa-solid fa-link"></i></a>`;
 
 						overlays.add(element.id, 'drilldown', {
 							position: {
@@ -417,7 +403,7 @@ export default class BPMNEditor extends Editor {
 							html: htmlOverlay,
 						});
 					} else {
-						const htmlOverlay = `<a href="https://${modelUrl}" class="djs-overlay djs-overlay-drilldown link-overlay" target="_blank""><i class="fa-regular fa-file-lines"></i></a>`;
+						const htmlOverlay = `<a href="https://${this.escapeHtml(modelUrl)}" class="djs-overlay djs-overlay-drilldown link-overlay" target="_blank"><i class="fa-regular fa-file-lines"></i></a>`;
 
 						let left = element.width;
 						let top = element.height + 5;
@@ -431,11 +417,9 @@ export default class BPMNEditor extends Editor {
 							html: htmlOverlay,
 						});
 					}
-				} catch (e) {
-					//These overlays are just helpful, so it's better to skip any that break without warning the user
-					console.error('non-breaking error: ');
-					console.log(e);
-				}
+			} catch (e) {
+				// These overlays are just helpful, so it's better to skip any that break without warning the user
+			}
 			}
 		});
 	}
@@ -455,7 +439,7 @@ export default class BPMNEditor extends Editor {
 				.attr('role', 'button')
 				.addClass('entry')
 				.on('click', this.toggleProperties)
-				.append('<span>Properties</span>')
+				.append(`<span>${t('files_bpm_ru', 'Свойства')}</span>`)
 				.appendTo(actionsgroup);
 		}
 
@@ -463,8 +447,6 @@ export default class BPMNEditor extends Editor {
 	}
 
 	private toggleProperties = (ev: JQuery.ClickEvent) => {
-		openPropertiesPanel = !openPropertiesPanel;
-
 		const propertiesElement =
 			this.getAppContainerElement().find('.bpmn-properties');
 		propertiesElement.toggleClass('hidden');
