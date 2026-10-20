@@ -34,7 +34,7 @@ class PageController extends Controller {
 		string $AppName,
 		IRequest $request,
 		IRootFolder $storage,
-		?string $UserId,
+		?string $userId,
 		LoggerInterface $logger,
 		IURLGenerator $urlGenerator,
 		\OCP\Share\IManager $shareManager,
@@ -42,7 +42,7 @@ class PageController extends Controller {
 		IConfig $config,
 	) {
 		parent::__construct($AppName, $request);
-		$this->userId = $UserId ?? '';
+		$this->userId = $userId ?? '';
 		$this->storage = $storage;
 		$this->logger = $logger;
 		$this->urlGenerator = $urlGenerator;

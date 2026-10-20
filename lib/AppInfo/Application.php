@@ -14,7 +14,6 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
-use OCP\IPreview;
 
 class Application extends App implements IBootstrap {
 	public const APP_ID = 'files_bpm_ru';
@@ -27,23 +26,16 @@ class Application extends App implements IBootstrap {
 	}
 
 	public function register(IRegistrationContext $context): void {
+		// registerPreviewProvider() is the supported API since Nextcloud 23.0.0 and is
+		// the only one available since Nextcloud 35 (IPreview::registerProvider was removed).
+		$context->registerPreviewProvider(BPMN::class, '/application\/x-bpmn/');
+		$context->registerPreviewProvider(DMN::class, '/application\/x-dmn/');
+		$context->registerPreviewProvider(CMMN::class, '/application\/x-cmmn/');
+
 		$context->registerEventListener(LoadAdditionalScriptsEvent::class, LoadAdditionalScriptsListener::class);
 		$context->registerEventListener(BeforeTemplateRenderedEvent::class, LoadAdditionalScriptsListener::class);
 	}
 
 	public function boot(IBootContext $context): void {
-		$context->injectFn(function (IPreview $previewManager, BPMN $bpmn, DMN $dmn, CMMN $cmmn) {
-			$previewManager->registerProvider('/application\/x-bpmn/', function () use ($bpmn) {
-				return $bpmn;
-			});
-
-			$previewManager->registerProvider('/application\/x-dmn/', function () use ($dmn) {
-				return $dmn;
-			});
-
-			$previewManager->registerProvider('/application\/x-cmmn/', function () use ($cmmn) {
-				return $cmmn;
-			});
-		});
 	}
 }
